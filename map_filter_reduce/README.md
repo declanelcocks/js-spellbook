@@ -28,8 +28,10 @@ arr.map((elem, index, arr) => {
 | ---------- | ------- |
 | elem		   | Element value
 | index      | Index of the element, moving from left to right |
-| arr		   | The original Array used to invoke `.map()`
+| arr		     | The original Array used to invoke `.map()`
 | thisArg    | Optional Object that will be referred to as `this` in the callback function
+
+**NOTE:** `.map()` is exactly the same as `.forEach()`, except `.forEach()` will directly manipulate the Array. A `.map()` function can also have other functions chained onto it, whereas a `.forEach()` cannot.
 
 ### .filter()
 ----
