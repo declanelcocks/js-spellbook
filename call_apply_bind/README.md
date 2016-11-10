@@ -50,7 +50,7 @@ say.apply(person, ['Hello']);
 ### .bind()
 ----
 
-`.bind()` allows you to create a completely new function with the `this` of your choosing bound to it. Any arguments passed to `.bind()` will also be set as permanent values for that parameter.
+`.bind()` allows you to create a completely new function with the `this` of your choosing bound to it. Any arguments passed to `.bind()` will also be set as the values for those parameters.
 
 **Example:**
 
@@ -64,11 +64,9 @@ const sayHelloToDeclan = say.bind(person, 'Hello');
 **Example 2:**
 
 ```javascript
-var multiply = function(num1, num2) {
-	return num1 * num2;
-}
+const multiply = (a, b) => a * b;
 
-var multiplyByTwo = multiply.bind(this, 2);
+const multiplyByTwo = multiply.bind(this, 2);
 ```
 
 - Creates a base function to multiply two numbers together
