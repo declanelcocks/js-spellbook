@@ -80,7 +80,7 @@ const sum = numbers.reduce((acc, elem) => acc + elem, 0);
 
 **Example 2:** First, get all the even numbers from an Array. Second, double these numbers. We could perform `.filter()` and then `.map()`, but it's more efficient to use `.reduce()`. In this is example, it is basically performing as a more readable and functional `for` loop.
 
-```
+```javascript
 const numbers = [1, 2, 3, 4];
 
 const result = numbers.filter((elem, index, arr) => {
