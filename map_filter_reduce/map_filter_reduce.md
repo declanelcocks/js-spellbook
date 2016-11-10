@@ -68,7 +68,7 @@ arr.map((elem, index, arr) => {
 ### .reduce()
 ----
 
-**Use when:** You want to iterate over an array accumulating a single result or Object. Also used when
+**Use when:** You want to iterate over an array accumulating a single result. Also used when you want to perform multiple actions on each item as it is more efficient than chaining multiple actions (e.g. `.filter(...).map(...)`).
 
 **Example:** Get the sum of the elements in an Array
 
