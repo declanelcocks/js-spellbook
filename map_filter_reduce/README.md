@@ -1,3 +1,7 @@
+## Map, Filter and Reduce
+
+These three Array methods are various ways of looping through an Array and performing actions. These methods are far more readable than standard `for` loops as there are less pieces of code to read. Although not always faster than `for` loop, these functions personify Functional Programming as they don't mutate the original Array and have no side-effects.
+
 ### .map()
 ----
 
