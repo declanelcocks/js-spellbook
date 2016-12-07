@@ -35,7 +35,9 @@ arr.map((elem, index, arr) => {
 | arr		     | The original Array used to invoke `.map()`
 | thisArg    | Optional Object that will be referred to as `this` in the callback function
 
-**NOTE:** `.map()` is exactly the same as `.forEach()`, except `.forEach()` will directly manipulate the Array. A `.map()` function can also have other functions chained onto it, whereas a `.forEach()` cannot.
+**NOTE:** `.map()` is exactly the same as `.forEach()`, except `.forEach()` will directly mutate the Array. A `.map()` function can also have other functions chained onto it, whereas a `.forEach()` cannot. 
+
+**NOTE:** Also, a `.forEach()` is generally used when you don't care about receiving a result from the looping and instead want to directly mutate the Array.
 
 ### .filter()
 ----
