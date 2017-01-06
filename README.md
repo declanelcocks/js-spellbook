@@ -7,3 +7,5 @@
 [3 - Arrow Functions](/arrow_functions)
 
 [4 - This](/this)
+
+[5 - Function Generators](/generators)
