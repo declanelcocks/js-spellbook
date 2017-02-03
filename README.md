@@ -12,6 +12,8 @@
 
 [2 - Template Literals](/es6/template_literals)
 
-[3 - Arrow Functions](/es6/arrow_functions)
+[3 - Destructuring](/es6/destructuring)
 
-[4 - Function Generators](/es6/generators)
+[ - Arrow Functions](/es6/arrow_functions)
+
+[ - Function Generators](/es6/generators)
