@@ -1,9 +1,11 @@
 ## Table of contents
 
-1. [Map, Filter, Reduce](/map_filter_reduce)
-
-2. [Call, Apply, Bind](/call_apply_bind)
-
-3. [This](/this)
-
-4. [ES6](/es6)
+- [Concepts](/concepts)
+    - [Map, Filter and Reduce](/concepts#map-filter-and-reduce)
+    - [Call, Apply and Bind](/concepts#call-apply-and-bind)
+- [ES6](/es6)
+    - [Let and Const](/es6#let-and-const)
+    - [Template Literals](/es6#template-literals)
+    - [Destructuring](/es6#destructuring)
+    - [Arrow Functions](/es6#arrow-functions)
+    - [Function Generators](/es6#function-generators)

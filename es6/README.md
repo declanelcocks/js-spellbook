@@ -100,11 +100,12 @@ function forLoopExample() {
 
 We are looping through every item of the Array, and for each one we are pushing a callback function into a new Array called `callbacks`. The callback is nothing complicated, it just returns the value of `arr[i]`. At the end of the `function`, we loop through each callback and run it.
 
-__Expected outcome__: We expect to loop through the `callbacks` Array, and see an Array created with the callbacks like this: `[1, 2, 3, 4]`.
+*_Expected outcome_*: We expect to loop through the `callbacks` Array, and see an Array created with the callbacks like this: `[1, 2, 3, 4]`.
 
-__Actual outcome:__ We actually get an Array returned of `[undefined, undefined, undefined, undefined]`. Not ideal.
+*_Actual outcome:_* We actually get an Array returned of `[undefined, undefined, undefined, undefined]`. Not ideal.
 
-**Why?**
+*_Why?_*
+
 Let's break it down:
 
 - `var` is scoped to its closure which is the `function` it was declared in
@@ -113,7 +114,8 @@ Let's break it down:
 - When each callback runs, it looks up the value of `i` and finds the `i` scoped to the closure
 - When the `for` loop has finished, `i` is `4` and each callback is going to look for `arr[4]` which returns `undefined`
 
-**How do we fix this?**
+*_How do we fix this?_*
+
 It's as simple as replacing `var i = 0` with `let i = 0`, and that's it. It works as expected.
 
 - Each callback is now referencing an `i` variable from its block rather than the closure thanks to `let`.
@@ -172,7 +174,7 @@ function tag() {
 
 You can also use a `tag` to customize the String's construction using a function. In this simple example, it's not that useful but it can be useful.
 
-**Making HTTP requests:**
+*_Making HTTP requests:_*
 
 ```javascript
 POST`http://foo.org/bar?a=${a}&b=${b}
@@ -184,7 +186,7 @@ POST`http://foo.org/bar?a=${a}&b=${b}
 
 Construct a readable HTTP request prefix used to interpret the replacements and construction
 
-**styled-components:**
+*_styled-components:_*
 
 The [styled-components](https://github.com/styled-components/styled-components) library allows you to create React components like this:
 
@@ -363,53 +365,41 @@ Arrow functions, introduced in ES6, are anonymous functions which make use of le
 
 **Note:** They are **not** a replacement for `function()`.
 
-### Syntax
-----
-
-**Single line return function:**
-
-ES5:
+*_Single line return function:_*
 
 ```javascript
+// ES5
 function(a) {
   return a * 2;
 }
-```
 
-ES6:
-
-```javascript
+// ES6
 (a) => a * 2;
 ```
 
-**Standard function**
-
-ES5:
+*_Standard function_*
 
 ```javascript
+// ES5
 function(a, b) {
   ...
 }
-```
 
-ES6:
-
-```javascript
+// ES6
 (a, b) => {
   ...
 }
 ```
 
 ### Lexical Scoping
-----
 
 Typically with ES5, we would use `.bind()` or a `self = this` line to get over the pain of the `this` Object. With the lexical scoping of arrow functions in ES6, it's far simpler:
 
-ES5:
-
 ```javascript
+// ES5
 function FooCtrl (FooService) {
   var self = this;
+  // Note the use of `self = this` to allow us to call `self` inside the Service's method
   
   this.foo = 'Hello';
   
@@ -417,13 +407,8 @@ function FooCtrl (FooService) {
     self.foo = response;
   });
 }
-```
 
-*Note the use of `self = this` to allow us to call `self` inside the Service's method*
-
-ES6:
-
-```javascript
+// ES6
 function FooCtrl (FooService) {
   this.foo = 'Hello';
   
@@ -433,14 +418,13 @@ function FooCtrl (FooService) {
 
 *A lot simpler!*
 
-**Note:** It's important to note that `this` is not bound to the arrow function, but rather the `this` value is fetched lexically from the scope it sits inside. Technically, it has no `this` at all.
+**Note:** It's important to note that `this` is not bound to the arrow function, but rather the `this` value is fetched lexically from the scope it sits inside.
 
 # Function Generators
 
 Generators are "pausable" functions available within ES6. Together with a library like `Bluebird`, generators can make using `Promise`'s a lot simpler and a lot nicer to read.
 
 ### My First Generator!
-----
 
 ```javascript
 const myFirstGenerator = function* () {
@@ -480,10 +464,10 @@ As we keep calling `gen.next()` it will keep going onto the next `yield` and pau
 
 
 ### Generators with Bluebird
-----
+
 When using a Promise library like `Bluebird`, we can take advantage of some of their features to make using Promises and generators really simple.
 
-**Synchronous API Calls**
+*_Synchronous API Calls_*
 
 ```javascript
 Promise.coroutine(function* () {
@@ -496,7 +480,7 @@ Promise.coroutine(function* () {
 
 Consider the above generator. It will run our API call for `tweets.json`, then fetch `profile.json`, then log the results to the console. When you look at it, it looks a million times simpler than using multiple `.then()` calls.
 
-**Asynchronous API Calls**
+*_Asynchronous API Calls_*
 
 ```javascript
 Promise.coroutine(function* () {
@@ -511,7 +495,6 @@ Promise.coroutine(function* () {
 `Bluebird` also allows you to make multiple API calls asynchronously. In this example, it will fetch `tweets.json` and `profile.json` at the same time, and wait until **both** API calls have finished before unpausing the generator. This kind of behaviour could be very useful if you need to initiate your page with various data from various API endpoints.
 
 ### Build your own generator libary
-----
 
 Let's build our own generator library which will function in the same way as the `co` library. This section was taken from a great youtube [video](https://www.youtube.com/watch?v=ategZqxHkz4) about generators.
 
@@ -533,7 +516,7 @@ This is what we want to be able to run. We want to be able to call `run(generato
 
 The simple API call we make will fetch a sample blog post from `jsonplaceholder`. After fetching it, we want to convert it into a nice `JSON` Object, and then extract and return the post's `title` value.
 
-**Process the Promises from our generator**
+*_Process the Promises from our generator_*
 
 ```javascript
 function run(generator) {
