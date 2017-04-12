@@ -1,8 +1,42 @@
-1. [Map, Filter and Reduce](#map-filter-and-reduce)
-2. [Call, Apply and Bind](#call-apply-and-bind)
-3. [Destructuring](#destructuring)
-4. [Arrow Functions](#arrow-functions)
-5. [Function Generators](#function-generators)
+1. [Compiler and Execution Phase](#compiler-and-execution-phase)
+2. [Map, Filter and Reduce](#map-filter-and-reduce)
+3. [Call, Apply and Bind](#call-apply-and-bind)
+
+# Compiler and Execution Phase
+
+When compiled, the compiler will recursively go through every function checking for variable declarations. A Scope manager will also keep track of which Scope these variables are declared in.
+
+```javascript
+var foo = 'bar'
+
+function bar() {
+  var foo = 'baz'
+}
+
+function baz(foo) {
+  foo = 'bam'
+  bam = 'yay'
+}
+```
+
+_Compile Phase_
+
+- The 1st `foo` as a variable declaration inside the `global` Scope
+- The 2nd `foo` as a variable declaration inside the `bar()` Scope
+- The 3rd `foo` as a variable declaration inside the `baz()` Scope. Because it's a parameter of a function, it will still be declared as a variable.
+
+_Execution Phase_
+
+- Line 1 will become simply `foo = 'bar'` during the execution phase as it’s been declared
+    - It will see `foo` and ask the Scope manager `Has the global Scope has ever heard of a variable called 'foo'?`
+    - The Scope manager will say `Yes` and we get a reference to that `foo`
+- Functions will be ignored unless they were invoked elsewhere
+    - Same occurs again where we check the Scope of `baz()` for a variable called `foo` and same result again
+- 3rd function
+    - Since `foo` is a parameter of `baz()`, it will see `foo` as a variable in the `baz()` Scope
+    - `bam` doesn’t exist in this Scope, so it will move out to the `global` Scope and see if it exists in the `global` Scope
+    - We come to the `global` Scope, and the `global` Scope will say `Yes, I just created 'bam' for you` (in strict mode, it will say it doesn’t exist and throw an error)
+    - _Note:_ This is how global leakage occurs in JavaScript, because `bam` is now a reference to a global variable or a variable declared somewhere outside of the Scope of `baz()`
 
 # Map, Filter and Reduce
 
