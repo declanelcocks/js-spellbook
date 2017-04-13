@@ -1,6 +1,7 @@
 1. [Compiler and Execution Phase](#compiler-and-execution-phase)
-2. [Map, Filter and Reduce](#map-filter-and-reduce)
-3. [Call, Apply and Bind](#call-apply-and-bind)
+2. [This](#this)
+3. [Map, Filter and Reduce](#map-filter-and-reduce)
+4. [Call, Apply and Bind](#call-apply-and-bind)
 
 # Compiler and Execution Phase
 
@@ -37,6 +38,85 @@ _Execution Phase_
     - `bam` doesn’t exist in this Scope, so it will move out to the `global` Scope and see if it exists in the `global` Scope
     - We come to the `global` Scope, and the `global` Scope will say `Yes, I just created 'bam' for you` (in strict mode, it will say it doesn’t exist and throw an error)
     - _Note:_ This is how global leakage occurs in JavaScript, because `bam` is now a reference to a global variable or a variable declared somewhere outside of the Scope of `baz()`
+
+# This
+
+Every function, **while executing**, has a reference to its current execution context, called `this`. (Execution context is when and how the function was called)
+
+1. Implicit binding
+2. Default binding
+3. Explicit binding
+4. New binding
+
+To workout what `this` is, we check the **call-site** and see which of these 4 rules applies, with `new` taking the highest precedence.
+
+_Implicit Binding_
+
+Does the call-site have a context Object? Also referred to as an owning or containing Object. `this` will refer to the Object's properties
+
+```javascript
+var obj = {
+  bar: 1,
+  foo: function() {
+    console.log(this.bar)
+  }
+}
+
+obj.foo()
+```
+
+When `obj.foo()` is called, the call-site will be the `foo` function inside `obj`. Does the call site have a context Object? **Yes**, so `this.bar` will be `1`.
+
+_Default Binding_
+
+This is a plain function call, the most common scenario. More often than not it will refer to the `global` Scope or some other outer Scope.
+
+```javascript
+function foo() {
+  console.log(this.a)
+}
+
+var a = 2
+
+foo() // 2
+```
+
+_Explicit Binding_
+
+This is where `.call()`, `.apply()` or `.bind()` is used at the call site to explicitly set the `this` reference.
+
+e.g.
+- `.call()` => `fn.call(thisObj, fnParam1, fnParam2)`
+- `.apply()` => `fn.apply(thisObj, [fnParam1, fnParam2])`
+- `.bind()` => `const newFn = fn.bind(thisObj, fnParam1, fnParam2)`
+
+```javascript
+var foo = function() {
+  console.log(this.bar)
+}
+
+foo.call({ bar: 1 }) // 1
+```
+
+_New Binding_
+
+Consider `var a = new Foo()`. This will do the following:
+
+- Create a new empty Object called `a`
+- Link the `a` Object to the `Foo` Object, which contains a `prototype` and `constructor`
+- This new `a` Object gets bound as `this` in the `new Foo()` call
+
+```javascript
+function Foo(a) {
+  this.a = a
+}
+
+var bar = new Foo(2)
+
+console.log(bar.a) // 2
+```
+
+By calling `Foo(..)` with `new` in front of it, we've constructed a new Object and set that new Object as `this` for the call of `Foo(..)`.
 
 # Map, Filter and Reduce
 
