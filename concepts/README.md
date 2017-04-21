@@ -1,7 +1,8 @@
 1. [Compiler and Execution Phase](#compiler-and-execution-phase)
 2. [This](#this)
-3. [Map, Filter and Reduce](#map-filter-and-reduce)
-4. [Call, Apply and Bind](#call-apply-and-bind)
+3. [Closure](#closure)
+4. [Map, Filter and Reduce](#map-filter-and-reduce)
+5. [Call, Apply and Bind](#call-apply-and-bind)
 
 # Compiler and Execution Phase
 
@@ -117,6 +118,44 @@ console.log(bar.a) // 2
 ```
 
 By calling `Foo(..)` with `new` in front of it, we've constructed a new Object and set that new Object as `this` for the call of `Foo(..)`.
+
+# Closure
+
+Closure is when a function "remembers" its lexical scope (compile time scope), even when the function is executed outside that lexical scope. Here's a simple example:
+
+```javascript
+const a = 123
+
+function foo() {
+  console.log(this.a)
+}
+```
+
+During the compile phase, this function will see that it needs to refer to a variable called `a`, and make a reference to the global `a` we created. Now, it doesn't matter where the call site of this function is, it will always refer to this global `a` variable.
+
+Another example:
+
+```javascript
+function foo() {
+  const bar = 'bar'
+
+  function baz() {
+    console.log(bar)
+  }
+
+  outerFn(baz)
+}
+
+function outerFn(baz) {
+  baz()
+}
+
+foo()
+```
+
+At the end of this long winded function, `outerFn()` is invoking `baz()` from completely outside of `foo()`. If we tried to log `bar` from inside `outerFn`, we would not get `'bar'`.
+
+`baz()` is passed into `outerFn()`, which "remembers" the lexical scope in which it was invoked. It "remembers" the lexical scope of `foo()`, which gives it a reference to `bar`.
 
 # Map, Filter and Reduce
 

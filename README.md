@@ -3,6 +3,7 @@
 - [Concepts](/concepts)
     - [Compiler and Execution Phase](/concepts#compiler-and-execution-phase)
     - [This](/concepts#this)
+    - [Closure](/concepts#closure)
     - [Map, Filter and Reduce](/concepts#map-filter-and-reduce)
     - [Call, Apply and Bind](/concepts#call-apply-and-bind)
 - [ES6](/es6)
