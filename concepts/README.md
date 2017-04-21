@@ -157,6 +157,17 @@ At the end of this long winded function, `outerFn()` is invoking `baz()` from co
 
 `baz()` is passed into `outerFn()`, which "remembers" the lexical scope in which it was invoked. It "remembers" the lexical scope of `foo()`, which gives it a reference to `bar`.
 
+**Private Variables**
+
+Closures are also good for keeping some data private (creating Privileged Methods).
+
+```javascript
+const secretFunction = (secret) =>
+    getSecret: () => secret
+```
+
+This `getSecret` function has access to its parent's Scope, giving it access to `secret` and any other variables created within `secretFunction`. If we try to access `secret` from outside of this `secretFunction`, it will throw an error.
+
 # Map, Filter and Reduce
 
 These three Array methods are various ways of looping through an Array and performing actions. These methods are far more readable than standard `for` loops as there are less pieces of code to read. Although not always faster than `for` loop, these functions personify Functional Programming as they don't mutate the original Array and have no side-effects.
