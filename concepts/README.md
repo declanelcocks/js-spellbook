@@ -2,8 +2,9 @@
 2. [Hoisting](#hoisting)
 3. [This](#this)
 4. [Closure](#closure)
-5. [Map, Filter and Reduce](#map-filter-and-reduce)
-6. [Call, Apply and Bind](#call-apply-and-bind)
+5. [IIFE](#iife)
+6. [Map, Filter and Reduce](#map-filter-and-reduce)
+7. [Call, Apply and Bind](#call-apply-and-bind)
 
 # Compiler and Execution Phase
 
@@ -213,6 +214,40 @@ const secretFunction = (secret) =>
 ```
 
 This `getSecret` function has access to its parent's Scope, giving it access to `secret` and any other variables created within `secretFunction`. If we try to access `secret` from outside of this `secretFunction`, it will throw an error.
+
+# IIFE
+
+- Takes advantage of the functionality of a `function` to create a private Scope for your enclosed code
+- Wraps the function in () to create a function expression rather than a standard function keyword declaration
+- Add () to immediately invoke the expression
+
+_Module Pattern_
+
+An IIFE can also be used to create a "module":
+
+```javascript
+var foo = (function() {
+  var o = {
+    bar: 'bar'
+  }
+
+  return {
+    bar: function() {
+      console.log(o.bar)
+    }
+  }
+})()
+
+foo.bar() // 'bar'
+```
+
+Outside of the IIFE, we can call `foo.bar()` and it will return to us the value of `o.bar` from inside the "private" code. However, this code is completely private, and we have no way of directly accessing or referencing `o.bar` inside the `foo` IIFE.
+
+This is great for creating private modules or pieces of code, or for immediately invoking a block of code. Here are some specific requirements when using this **Module Pattern**:
+
+- Wraps some code in an IIFE to make the inner workings of the module private
+- Returns at least one function that will have a closure over the private Scope of the module
+- This gives us a public API which is using private data from the module
 
 # Map, Filter and Reduce
 

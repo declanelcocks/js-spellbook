@@ -5,6 +5,7 @@
     - [Hoisting](/concepts#hoisting)
     - [This](/concepts#this)
     - [Closure](/concepts#closure)
+    - [IIFE](/concepts#iife)
     - [Map, Filter and Reduce](/concepts#map-filter-and-reduce)
     - [Call, Apply and Bind](/concepts#call-apply-and-bind)
 - [ES6](/es6)
