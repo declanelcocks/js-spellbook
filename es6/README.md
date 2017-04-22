@@ -1,12 +1,16 @@
-1. [Let and Const](#let-and-const)
+1. [Var, Let, and Const](#var-let-and-const)
 2. [Template Literals](#template-literals)
 3. [Destructuring](#destructuring)
 4. [Arrow Functions](#arrow-functions)
 5. [Function Generators](#function-generators)
 
-# Let and Const
+# Var, Let, and Const
 
-In ES6, these are the new ways to declare variables. Hooray for not having to use `var` and have all of the closure issues that came with it.
+In ES6, these are the new ways to declare variables. Hooray for not having to use `var` and have all of the closure issues that came with it. Here's how it works from a Scope perspective:
+
+- `var` will be attached to the function it’s inside
+- `let` will be attached to the block it’s inside
+- `let` is not hoisted so has to be placed at the top of a block to make it available throughout the block
 
 ### Immutable data with const
 
