@@ -2,6 +2,7 @@
 
 - [Concepts](/concepts)
     - [Compiler and Execution Phase](/concepts#compiler-and-execution-phase)
+    - [Hoisting](/concepts#hoisting)
     - [This](/concepts#this)
     - [Closure](/concepts#closure)
     - [Map, Filter and Reduce](/concepts#map-filter-and-reduce)

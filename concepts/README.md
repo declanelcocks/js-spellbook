@@ -1,8 +1,9 @@
 1. [Compiler and Execution Phase](#compiler-and-execution-phase)
-2. [This](#this)
-3. [Closure](#closure)
-4. [Map, Filter and Reduce](#map-filter-and-reduce)
-5. [Call, Apply and Bind](#call-apply-and-bind)
+2. [Hoisting](#hoisting)
+3. [This](#this)
+4. [Closure](#closure)
+5. [Map, Filter and Reduce](#map-filter-and-reduce)
+6. [Call, Apply and Bind](#call-apply-and-bind)
 
 # Compiler and Execution Phase
 
@@ -39,6 +40,51 @@ _Execution Phase_
     - `bam` doesn’t exist in this Scope, so it will move out to the `global` Scope and see if it exists in the `global` Scope
     - We come to the `global` Scope, and the `global` Scope will say `Yes, I just created 'bam' for you` (in strict mode, it will say it doesn’t exist and throw an error)
     - _Note:_ This is how global leakage occurs in JavaScript, because `bam` is now a reference to a global variable or a variable declared somewhere outside of the Scope of `baz()`
+
+# Hoisting
+
+Hoisting is the conceptual model for how JavaScript works:
+
+- Variable and function declarations are **hoisted** to the top of our code and declared during the compile phase to make sure they are available for reference at runtime.
+- The function expression itself is not hoisted to the top, just the declaration.
+
+```javascript
+var a = b();
+var c = d();
+a;
+c;
+
+function b() {
+  return c
+}
+
+var d = function() {
+  return b();
+}
+```
+
+When compiled, the declarations are hoisted and effectively re-ordered like this:
+
+```javascript
+// Function declarations are moved to the top
+function b() {
+  return c;
+}
+
+// Variables are declared, but no value is assigned
+var a;
+var c;
+var d;
+
+// Declared variables are assigned values
+a = b();
+c = d();
+a;
+c;
+d = function() {
+  return b();
+}
+```
 
 # This
 
