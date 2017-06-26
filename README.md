@@ -14,3 +14,7 @@
     - [Destructuring](/es6#destructuring)
     - [Arrow Functions](/es6#arrow-functions)
     - [Function Generators](/es6#function-generators)
+- [React](/react)
+    - [Parent & Child Communication](/react#parent--child-communication)
+    - [Avoiding Re-rendering Components](/react#avoiding-re-rendering-components)
+    - [HOCs](/react#hocs)
