@@ -1,8 +1,25 @@
 1. [Var, Let, and Const](#var-let-and-const)
+    * [Immutable data with const](#immutable-data-with-const)
+    * [Block scoping](#block-scoping)
+    * [Fixing the for loop](#fixing-the-for-loop)
 2. [Template Literals](#template-literals)
+    * [Interpolation](#interpolation)
+    * [Multiline strings](#multiline-strings)
+    * [Tags](#tags)
 3. [Destructuring](#destructuring)
+    * [Simple destructuring](#simple-destructuring)
+    * [Nested destructuring](#nested-destructuring)
+    * [Destructuring an Array](#destructuring-an-array)
+    * [Destructuring specific items in an Array](#destructuring-specific-items-in-an-array)
+    * [Nested destructuring with Arrays](#nested-destructuring-with-arrays)
+    * [Destructuring a mix of Arrays and Objects](#destructuring-a-mix-of-arrays-and-objects)
+    * [Setting default values](#setting-default-values)
 4. [Arrow Functions](#arrow-functions)
+    * [Lexical scoping](#lexical-scoping)
 5. [Function Generators](#function-generators)
+    * [My First Generator](#my-first-generator)
+    * [Generators with Bluebird](#generators-with-bluebird)
+    * [Build your own generator library](#build-your-own-generator-library)
 
 # Var, Let, and Const
 
@@ -404,9 +421,9 @@ Typically with ES5, we would use `.bind()` or a `self = this` line to get over t
 function FooCtrl (FooService) {
   var self = this;
   // Note the use of `self = this` to allow us to call `self` inside the Service's method
-  
+
   this.foo = 'Hello';
-  
+
   FooService.doSomething(function(response) {
     self.foo = response;
   });
@@ -415,7 +432,7 @@ function FooCtrl (FooService) {
 // ES6
 function FooCtrl (FooService) {
   this.foo = 'Hello';
-  
+
   FooService.doSomething((response) => this.foo = response);
 }
 ```
@@ -428,7 +445,7 @@ function FooCtrl (FooService) {
 
 Generators are "pausable" functions available within ES6. Together with a library like `Bluebird`, generators can make using `Promise`'s a lot simpler and a lot nicer to read.
 
-### My First Generator!
+### My First Generator
 
 ```javascript
 const myFirstGenerator = function* () {
@@ -498,7 +515,7 @@ Promise.coroutine(function* () {
 ```
 `Bluebird` also allows you to make multiple API calls asynchronously. In this example, it will fetch `tweets.json` and `profile.json` at the same time, and wait until **both** API calls have finished before unpausing the generator. This kind of behaviour could be very useful if you need to initiate your page with various data from various API endpoints.
 
-### Build your own generator libary
+### Build your own generator library
 
 Let's build our own generator library which will function in the same way as the `co` library. This section was taken from a great youtube [video](https://www.youtube.com/watch?v=ategZqxHkz4) about generators.
 

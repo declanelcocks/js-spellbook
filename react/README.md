@@ -1,6 +1,13 @@
 1. [Parent & Child Communication](#parent--child-communication)
+    * [Instance Methods](#instance-methods)
+    * [Callback Functions](#callback-functions)
 2. [Avoiding Re-rendering Components](#avoiding-re-rendering-components)
 3. [HOCs](#hocs)
+    * [Intro to HOCs](#intro-to-hocs)
+    * [Recompose: Lifecycle Hooks](#recompose-lifecycle-hooks)
+    * [Recompose: Apply state/methods](#recompose-apply-statemethods)
+    * [Recompose: Dynamic Rendering](#recompose-dynamic-rendering)
+    * [Recompose: Formatting existing props](#recompose-formatting-existing-props)
 
 # Parent & Child Communication
 
@@ -277,3 +284,25 @@ export default enhance(App)
 
 As easy as that. `branch()` allows us to make sure our functional component remains a really simple UI component, and moves the dynamic rendering logic into a separate function. As we saw before, we can also use `lifecycle()` to access the lifecycle methods of a component without having to turn it into a class component.
 
+### Recompose: Formatting existing props
+
+Let's say you have a very simple `<Date />` component which simply renders a UI for a given date.
+
+
+```javascript
+const Date = ({ date }) => <h1>`My DOB is ${date}`</h1>
+```
+
+As simple as you can get, it takes in a `date` and renders it. But what happens if we decide we want to format the `date`? We can pass in the `date` in the necessary format to `<Date />`, or we can simple format the `date` locally. This is the better approach as we may not want to change `date`'s data structure; we just want to change how the UI renders the data.
+
+```javascript
+const getFormattedDate = d => `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`
+
+export default compose(
+  withPropsOnChange(['dob'], ({ dob }) => {
+    return { dob: getFormattedDate(dob) }
+  })
+)(Date)
+```
+
+Now, Recompose will take care of creating this formatted prop whenever the `dob` prop changes.
