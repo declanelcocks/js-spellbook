@@ -59,9 +59,67 @@ class TheParent extends Component {
 }
 ```
 
+# Component vs. PureComponent
+
+What is `PureComponent`? The only difference between it and `Component` is that `PureComponent` will also handle the `shouldComponentUpdate` method for us. `PureComponent` performs a _shallow comparison_ on both `props` and `state` to decide if the component should update or not. For a `Component`, it will re-render by default any time `props` or `state` changes.
+
+### _Shallow Comparison_
+
+When comparing `props` and `state`, it will check that primitives have the same values and that _references_ are the same for Arrays and Objects. This behaviour encourages _immutability_ when it comes to Arrays and Objects, and always return new references rather than mutating the existing value.
+
+Let's say you have an Array being passed into a `PureComponent`, and you want to add a new item to the Array. If you just wrote `myArray.push(1)`, the `PureComponent` would see a reference to the same Array, and not update. However, if we used a function that returned an entirely new Array with the new item added to it, our `PureComponent` would indeed update.
+
+### Don't bind functions inside render
+
+```javascript
+class Parent extends Component {
+  likeComment(userID) {
+    // ...
+  }
+
+  render() {
+    return (
+      // ...
+      <Comment likeComment={() => this.likeComment(user.id)} />
+      // ...
+    )
+  }
+}
+```
+
+Consider this simple `Parent` which renders a `Comment`. If `Parent` re-renders because of a change to another prop or state value, the entire `Comment` component will also re-render. Every time `Parent` re-renders, it creates an entirely new function and passes it in as the `likeComment` prop. If we had a list of comments, you can see how this could negatively impact performance.
+
+```javascript
+class Parent extends Component {
+  likeComment = (userID) => {
+    // ...
+  }
+
+  render() {
+    return (
+      // ...
+      <Comment likeComment={this.likeComment} userID={user.id} />
+      // ...
+    )
+  }
+}
+
+class Comment extends PureComponent {
+  // ...
+  handleLike() {
+    this.props.likeComment(this.props.userID)
+  }
+  // ...
+}
+```
+
+### Don't derive data in render
+
+For the same reason as above, we also shouldn't create new Arrays or Objects directly inside the `render()` method.
+
 # Avoiding Re-rendering Components
 
-First, I'll point out that I'm using `PureComponent`, which performs a shallow equality check on the component's `props`. This means it will try to only re-render the component when the `props` have actually changed. Let's look at a couple of situations where doing something quite logical can negatively impact the performance of your component, and virtually ignore your `PureComponent`:
+Let's look at a couple of situations where doing something quite logical can negatively impact the performance of your component, and virtually ignore your `PureComponent`:
 
 ```javascript
 class Table extends PureComponent {
