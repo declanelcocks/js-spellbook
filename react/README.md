@@ -1,7 +1,10 @@
 1. [Parent & Child Communication](#parent--child-communication)
     * [Instance Methods](#instance-methods)
     * [Callback Functions](#callback-functions)
-2. [Avoiding Re-rendering Components](#avoiding-re-rendering-components)
+2. [Component vs. PureComponent](#component-vs-purecomponent)
+    * [Shallow Comparison](#shallow-comparison)
+    * [Don't bind functions inside render](#dont-bind-functions-inside-render)
+    * [Don't derive data in render](#dont-derive-data-in-render)
 3. [HOCs](#hocs)
     * [Intro to HOCs](#intro-to-hocs)
     * [Recompose: Lifecycle Hooks](#recompose-lifecycle-hooks)
@@ -63,7 +66,7 @@ class TheParent extends Component {
 
 What is `PureComponent`? The only difference between it and `Component` is that `PureComponent` will also handle the `shouldComponentUpdate` method for us. `PureComponent` performs a _shallow comparison_ on both `props` and `state` to decide if the component should update or not. For a `Component`, it will re-render by default any time `props` or `state` changes.
 
-### _Shallow Comparison_
+### Shallow Comparison
 
 When comparing `props` and `state`, it will check that primitives have the same values and that _references_ are the same for Arrays and Objects. This behaviour encourages _immutability_ when it comes to Arrays and Objects, and always return new references rather than mutating the existing value.
 
@@ -113,84 +116,59 @@ class Comment extends PureComponent {
 }
 ```
 
+The same logic also applies when doing something like this:
+
+```javascript
+<Comments comments={this.props.comments || []} />
+```
+
+What we are expecting is that if there are no comments passed into the component, it will send an empty Array to the component. What actually happens here is that a new Array with a new reference is going to be used every time the `render()` method is ran. Instead, we can create a constant outside of our component (e.g. `const defaultComments = []`) and reference that.
+
 ### Don't derive data in render
 
 For the same reason as above, we also shouldn't create new Arrays or Objects directly inside the `render()` method.
 
-# Avoiding Re-rendering Components
-
-Let's look at a couple of situations where doing something quite logical can negatively impact the performance of your component, and virtually ignore your `PureComponent`:
-
 ```javascript
-class Table extends PureComponent {
-  render() {
-    return (
-      <div>
-        {this.props.items.map(i =>
-          <Cell data={i} options={this.props.options || []} />
-         )}
-       </div>
-     )
-  }
+render() {
+  const { posts } = this.props
+  const topTen = posts.sort((a, b) => b.likes - a.likes).slice(0, 9)
+  return //...
 }
 ```
 
-We want to render some `items` if they exist and if not (`null`), render an empty Array. The problem here is that saying `|| []` is the same as saying `|| new Array()`. This means that every time we come into our component, we're going to create a completely new Array instance. Despite using `PureComponent`, it will see a **new** reference to a **new** Array and tell the component to re-render.
+Here we're creating a new Array called `topTen` when the component renders. `topTen` will have a brand new reference each time the component re-renders, even if `posts` hasn’t changed. This will then re-render the component unnecessarily.
 
-Fixing this is easy. Outside of our component we can create a constant `const defaultItems = []` and use it in our component `this.props.options || defaultItems`. Now, whenever we come into the `Table` class, we will always be using the same reference to `[]`.
+There are a couple of ways we could solve this. The first would be to only set `topTen` when we know the value of `posts` has changed:
 
-Here's another example of unnecessary re-rendering:
-
-```javascript
-class App extends PureComponent {
-  render() {
-    return <MyInput onChange={e => this.props.update(e.target.value)} />
+```javascript```
+componentWillMount() {
+  this.setTopTenPosts(this.props.posts)
+}
+componentWillReceiveProps(nextProps) {
+  if (this.props.posts !== nextProps.posts) {
+    this.setTopTenPosts(nextProps)
   }
+}
+setTopTenPosts(posts) {
+  this.setState({
+    topTen: posts.sort((a, b) => b.likes - a.likes).slice(0, 9)
+  })
 }
 ```
 
-OR
+Another approach is to use `recompose` to create a new `prop` called `topTen` which is derived from the `posts` prop:
 
 ```javascript
-class App extends PureComponent {
-  update(e) {
-    this.props.update(e.target.value)
-  }
-
-  render() {
-    return <MyInput onChange={this.update.bind(this)} />
- }
-}
+export default compose(
+  withPropsOnChange(['posts'], ({ posts }) => {
+    return {
+      topTen: posts.sort((a, b) => b.likes - a.likes).slice(0, 9)
+    }
+  })
+)(Component)
 ```
 
-Both of these implementations will have the same issue again where a new function is being created every time, and the component will be unexpectedly re-rendered despite none of the `props` changing. When using functions inside our component, we should try and bind the function as soon as possible.
-
-```javascript
-class App extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.update = this.update.bind(this)
-  }
-
-  update(e) {
-    this.props.update(e.target.value)
-  }
-
-  render() {
-    return <MyInput onChange={this.update} />
-  }
-}
-```
-
-OR use
-
-```javascript
-update = (e) => {
-  this.props.update(e.target.value)
-}
-```
-
-This makes sure that as soon as the class is used, it binds the functions to the class. All instances of this class will then be using the same function, rather than creating their own instance of the function every time.
+And finally, you could consider using `reselect` to create selectors which return the derived data from Redux.
 
 # HOCs
 
