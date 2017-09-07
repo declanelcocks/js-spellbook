@@ -95,7 +95,7 @@ Every function, **while executing**, has a reference to its current execution co
 
 To workout what `this` is, we check the **call-site** and see which of these 4 rules applies, with `new` taking the highest precedence.
 
-_Implicit Binding_
+**Implicit Binding**
 
 Does the call-site have a context Object? Also referred to as an owning or containing Object. `this` will refer to the Object's properties
 
@@ -112,7 +112,7 @@ obj.foo()
 
 When `obj.foo()` is called, the call-site will be the `foo` function inside `obj`. Does the call site have a context Object? **Yes**, so `this.bar` will be `1`.
 
-_Default Binding_
+**Default Binding**
 
 This is a plain function call, the most common scenario. More often than not it will refer to the `global` Scope or some other outer Scope.
 
@@ -126,7 +126,7 @@ var a = 2
 foo() // 2
 ```
 
-_Explicit Binding_
+**Explicit Binding**
 
 This is where `.call()`, `.apply()` or `.bind()` is used at the call site to explicitly set the `this` reference.
 
@@ -143,7 +143,7 @@ var foo = function() {
 foo.call({ bar: 1 }) // 1
 ```
 
-_New Binding_
+**New Binding**
 
 Consider `var a = new Foo()`. This will do the following:
 
