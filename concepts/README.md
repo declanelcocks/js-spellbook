@@ -86,6 +86,10 @@ d = function() {
 
 # This
 
+**Context**
+
+We can’t alter how lexical scoping in JavaScript works, but we can control the _context_ in which we call our functions. Context is decided at runtime when the function is called, and it’s always bound to the object the function was called within. By saying, change the _context_, I mean, we’re changing what _this_ actually is.
+
 Every function, **while executing**, has a reference to its current execution context, called `this`. (Execution context is when and how the function was called)
 
 1. Implicit binding
@@ -162,6 +166,101 @@ console.log(bar.a) // 2
 ```
 
 By calling `Foo(..)` with `new` in front of it, we've constructed a new Object and set that new Object as `this` for the call of `Foo(..)`.
+
+**Nested functions**
+
+The only exception to these rules are nested functions like this:
+
+```JavaScript
+const person = {
+  personName: "MyPerson",
+  personAge: 50,
+
+  printInfo: function() {
+    console.log('Name:', this.personName)
+    console.log('Age:', this.personAge)
+
+    nestedFunction = function() {
+      console.log('this', this);
+      console.log('Name:', this.personName)
+      console.log('Age:', this.personAge)
+    }
+
+    nestedFunction()
+  }
+}
+
+person.printInfo()
+```
+
+Using the logic above, let's look at `printInfo`. First, we need to go back to the call-site of `printInfo` and check what's happening. We can see that `person.printInfo()` is invoking the function, and `person` is an Object, so `printInfo()` is going to use `person` as `this` through implicit binding. Great!
+
+To understand what's happening when `nestedFunction` is invoked, we need to recap the different ways of setting `this`.
+
+```javascript
+const obj = { value: 5 }
+
+obj.fn(10)
+fn.call(obj, 10)
+fn.apply(obj, [10])
+
+const newFn = fn.bind(obj)
+newFn(10)
+```
+
+In all of the above examples, we are setting `this` as `obj`. Calling a function without a leading parent object will generally use the `global` object (`window` in browsers) as `this`. This means that when we call `nestedFunction()`, there is nothing to tell this function what `this` is, and it will use `global` as `this`.
+
+An easy way to solve this is to make sure we call `nestedFunction` with the correct `this`. We can do this by changing the line to `nestedFunction.call(this)`, and this will work because when the function is invoked, `this` will be taken from `printInfo`, which in turn was invoked by `person` thus setting `this` as the `person` Object.
+
+<details>
+<summary>Click to test yourself!</summary>
+
+Copy the code below into your browser or any other workspace and try to guess the correct outputs.
+
+```javascript
+const Factory = {
+  value: 0,
+  add: function(v) {
+    this.value += v
+  },
+  subtract: (v) => this.value -= v
+}
+
+// What is Factory.value?
+console.log('Expected: ')
+console.log(`Actual: ${Factory.value}\n`)
+
+Factory.add(1)
+// What is Factory.value?
+console.log('Expected: ')
+console.log(`Actual: ${Factory.value}\n`)
+
+Factory.subtract(1)
+// What is Factory.value?
+console.log('Expected: ')
+console.log(`Actual: ${Factory.value}\n`)
+
+const myAdd = Factory.add
+myAdd(2)
+// What is Factory.value?
+console.log('Expected: ')
+console.log(`Actual: ${Factory.value}\n`)
+// Can you explain the result?
+
+const myOtherAdd = {
+  value: 10,
+  add: Factory.add,
+}
+
+myOtherAdd.add(5)
+// What is Factory.value?
+console.log('\nExpected: ')
+console.log(`Actual: ${Factory.value}`)
+// What is myOtherAdd.value?
+console.log('Expected: ')
+console.log(`Actual: ${myOtherAdd.value}`)
+```
+</details>
 
 # Closure
 
