@@ -14,9 +14,13 @@
     * [Nested destructuring with Arrays](#nested-destructuring-with-arrays)
     * [Destructuring a mix of Arrays and Objects](#destructuring-a-mix-of-arrays-and-objects)
     * [Setting default values](#setting-default-values)
-4. [Arrow Functions](#arrow-functions)
+4. [Object Literals](#object-literals)
+    * [Prototype](#prototype)
+    * [Method Shorthand](#method-shorthand)
+    * [Computed Property Names](#computed-property-names)
+5. [Arrow Functions](#arrow-functions)
     * [Lexical scoping](#lexical-scoping)
-5. [Function Generators](#function-generators)
+6. [Function Generators](#function-generators)
     * [My First Generator](#my-first-generator)
     * [Generators with Bluebird](#generators-with-bluebird)
     * [Build your own generator library](#build-your-own-generator-library)
@@ -379,6 +383,114 @@ function reducer({ state = {}, action }) {
 ```
 
 In Redux, it might be common to see this when creating a Reducer. If there is no state passed into the function, or if the state is `null`/`undefined` then it will default to `{}` which is something that our function can handle. Easy!
+
+# Object Literals
+
+### Prototype
+
+One confusing thing about using ES5 was `prototype`. It was used a lot to create a "class" like architecture, and with ES6 it's a lot easier.
+
+```javascript
+const parent = {
+  parentProp: 'parent',
+  otherProp: 'other',
+}
+
+const child = Object.create(parent, {
+  childProp: 'child',
+  otherProp: {
+    one: 'prop one',
+    two: 'prop two',
+    three: 'prop three',
+  }
+})
+```
+
+What just happened here? Well, we just removed the need to use prototype. We created a new Object called `child` with `parent` as its `prototype`, and then replaced the `otherProp` in the process. And it gets even easier:
+
+```javascript
+const child = {
+  __proto__: parent,
+  childProp: 'child',
+  otherProp: {
+    one: 'prop one',
+    two: 'prop two',
+    three: 'prop three',
+  }
+}
+
+// Don't forget to get the prototype like this
+// Don't use `child.__proto__` to refer to the prototype
+Object.getPrototypeOf(child)
+```
+
+We can even declare the `__proto__` in the Object literal, as weird as that may feel.
+
+### Method Shorthand
+
+Once you start playing around with the `class` keyword and some libraries using ES6, you may start to notice "methods" being used too.
+
+```javascript
+function myMethod() {
+  const greeter = {
+    sayHello: function sayHello(name) {
+      return `Hello ${name}`
+    }
+  }
+
+  return greeter.sayHello('Declan')
+}
+```
+
+This is how we would have previously written methods on an Object. There's nothing wrong with it, but who likes seeing `function` written everywhere?
+
+```javascript
+function myMethod() {
+  const greeter = {
+    sayHello(name) {
+      return `Hello ${name}`
+    }
+  }
+
+  return greeter.sayHello('Declan')
+}
+```
+
+And now it's slightly easier to read.
+
+### Computed Property Names
+
+Using dynamic property names within Objects, now that was something that was also very, very gruesome in ES5.
+
+```javascript
+function propertyNames() {
+  function makeCar(make, model) {
+    const car = {}
+
+    car[make] = make
+    car[model] = model
+  }
+
+  return makeCar('Ford', 'Mustang')
+}
+```
+
+Using nearly the same syntax, we are able to just declare the dynamic property names inside the Object literal.
+
+```javascript
+function propertyNames() {
+  function makeCar(make, model) {
+    const car = {
+      [make]: make,
+      [model]: model,
+    }
+  }
+
+  return makeCar('Ford', 'Mustang')
+}
+```
+
+It doesn't necessarily make the code any shorter, but it's definitely more logical to read. A useful point here is that you could put any expression you want inside `[]` as long as it returns a String.
 
 # Arrow Functions
 
