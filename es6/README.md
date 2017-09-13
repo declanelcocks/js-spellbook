@@ -18,9 +18,10 @@
     * [Prototype](#prototype)
     * [Method Shorthand](#method-shorthand)
     * [Computed Property Names](#computed-property-names)
-5. [Arrow Functions](#arrow-functions)
+5. [Parameters](#parameters)
+6. [Arrow Functions](#arrow-functions)
     * [Lexical scoping](#lexical-scoping)
-6. [Function Generators](#function-generators)
+7. [Function Generators](#function-generators)
     * [My First Generator](#my-first-generator)
     * [Generators with Bluebird](#generators-with-bluebird)
     * [Build your own generator library](#build-your-own-generator-library)
@@ -491,6 +492,29 @@ function propertyNames() {
 ```
 
 It doesn't necessarily make the code any shorter, but it's definitely more logical to read. A useful point here is that you could put any expression you want inside `[]` as long as it returns a String.
+
+# Parameters
+
+There's nothing _new_ to introduce regarding parameters, so I'm just going to point out that everything we learnt regarding destructuring can be applied to function parameters. We can set default values, rename values and all sorts. To sum it up, here's a really simple example:
+
+```javascript
+function makePerson(
+  firstName = requiredParam('first name'),
+  lastName = requiredParam('last name'),
+  fullName = `${firstName} ${lastName}`,
+) {
+  return { firstName, lastName, fullName }
+}
+
+function requiredParam(argName) {
+  throw new Error(`${argName} is a required parameter`)
+}
+
+makePerson('Declan') // throws error
+makePerson('Declan', 'Elcocks')
+```
+
+Rather than adding a bunch of lines to `makePerson` to check whether certain arguments are present, we simply set the default value of the argument as a function call. If `lastName` is not present, the `requiredParam` function will be called and throw an error. Easy!
 
 # Arrow Functions
 

@@ -29,6 +29,7 @@
         * [Prototype](/es6#prototype)
         * [Method Shorthand](/es6#method-shorthand)
         * [Computed Property Names](/es6#computed-property-names)
+    - [Parameters](/es6#parameters)
     - [Arrow Functions](/es6#arrow-functions)
         * [Lexical scoping](/es6#lexical-scoping)
     - [Function Generators](/es6#function-generators)
