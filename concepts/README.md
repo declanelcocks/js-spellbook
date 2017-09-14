@@ -84,6 +84,71 @@ d = function() {
 }
 ```
 
+# Prototype
+
+### What is prototype? And why is it difficult to understand?
+
+For people that come to JavaScript from other languages, seeing `new`, `class` or `constructor` makes it clear to them how inheritance works as it's very similar to other languages. The problem with JavaScript is that these operators are just that, they are words which are there to help make you feel more comfortable. Under the hood, there is nothing familiar about how inheritance is happening. In JavaScript, Objects can be strange things.
+
+**Class-based languages**
+In class-based languages (Java, C++, C#, Python etc.), a `class` and an `instance` of that class are two distinctly different things. An instance will inherit all the properties and methods of the class, but generally cannot modify them or add others. By knowing where an instance comes from, you'll know exactly how it will behave.
+
+**Prototype-based languages**
+JavaScript doesn't have _real_ classes, so inheritance is possible due to the `prototype` Object. It does the following:
+
+- An Object template from which we get the initial properties for a new Object
+- Any Object can be used as a prototype
+- The child Object can override the inherited methods/properties, which **will not** affect the prototype
+- The prototype can change its attributes, or add new ones, which **will** affect the Object
+
+So, the Object is just a _copy_ of the prototype Object and the prototype doesn't really care about this copy, but the Object definitely cares about the prototype.
+
+**Prototype chain**
+
+```javascript
+const Vehicle = {
+  used_for_transport: true,
+}
+
+const Car = {
+  __proto__: Vehicle,
+  wheels: 4,
+  engine: 'diesel',
+}
+
+const Tesla = {
+  __proto__: Car,
+  engine: 'electric',
+}
+```
+
+Using ES6, it's clear to see how the prototype chain is working. When we try to use our `Tesla` Object, it will have all of the properties of both `Car` and `Vehicle`, and it will also have overwritten the `engine` property inherited from `Car`. What is the prototype of `Vehicle` you might ask? Well, if it's not explicitly declared, the prototype will always be the global `Object()`.
+
+Any time you try to access an Object's attribute, JavaScript is looking through the prototype chain to find the value. If it eventually gets to the global `Object()` and can't find the property, it will return `undefined`.
+
+### Constructor function
+
+We saw that for an Object, `__proto__` is the name of the property which defines the Object's prototype. The `prototype` is a property belonging to functions only. It is used to build the `__proto__` when the function is used as a constructor with the `new` operator.
+
+```js
+function Car(name) {
+  this.name = name
+}
+
+const tesla = new Car('Tesla')
+```
+
+What's happening?
+- An Object is created
+- The `__proto__` of that Object is set to `Car.prototype`
+- The function `Car` is called with `this` as the newly created Object
+
+What properties does `tesla` now have?
+- `name` will be `'Tesla'`
+- `__proto__` will return:
+    * `constructor` which is the function `Car`
+    * `__proto__` which is the `prototype` of `Car` containing things such as `toString` etc.
+
 # This
 
 **Context**
