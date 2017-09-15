@@ -1,5 +1,6 @@
 1. [Compiler and Execution Phase](#compiler-and-execution-phase)
 2. [Hoisting](#hoisting)
+2. [Prototype](#prototype)
 3. [This](#this)
 4. [Closure](#closure)
 5. [IIFE](#iife)
@@ -128,7 +129,7 @@ Any time you try to access an Object's attribute, JavaScript is looking through 
 
 ### Constructor function
 
-We saw that for an Object, `__proto__` is the name of the property which defines the Object's prototype. The `prototype` is a property belonging to functions only. It is used to build the `__proto__` when the function is used as a constructor with the `new` operator.
+We saw that for an Object, `__proto__` defines the Object's prototype. Another property, `prototype`, belongs only to functions. It's used to build the `__proto__` when the function is used as a constructor with the `new` operator.
 
 ```js
 function Car(name) {
@@ -143,11 +144,53 @@ What's happening?
 - The `__proto__` of that Object is set to `Car.prototype`
 - The function `Car` is called with `this` as the newly created Object
 
-What properties does `tesla` now have?
+What does `tesla` look like?
 - `name` will be `'Tesla'`
 - `__proto__` will return:
     * `constructor` which is the function `Car`
     * `__proto__` which is the `prototype` of `Car` containing things such as `toString` etc.
+
+The can create as many `Car` Objects as we want, and if we want to add a property to all of those `Car`s we can do so. `Car.prototype.wheels = 4` will set apply to all `Car` Objects. This is all done using the prototype chain. `Car` and `tesla` have no direct reference to each other.
+
+### Classes
+
+The JavaScript `class` appeals to developers from OOP backgrounds, but it's essentially doing the same thing.
+
+```js
+class Rectangle {
+  constructor(height, width) {
+    this.height = height
+    this.width = width
+  }
+
+  get area() {
+    return this.calcArea()
+  }
+
+  calcArea() {
+    return this.height * this.width
+  }
+}
+
+const square = new Rectangle(10, 10)
+
+console.log(square.area) // 100
+```
+
+This is basically the same as:
+
+```js
+function Rectangle(height, width) {
+  this.height = height
+  this.width = width
+}
+
+Rectangle.prototype.calcArea = function calcArea() {
+  return this.height * this.width
+}
+```
+
+The `getter` and `setter` methods in classes bind an Object property to a function that will be called when that property is looked up. It's just syntactic sugar to help make it easier to _look up_ or _set_ properties.
 
 # This
 
