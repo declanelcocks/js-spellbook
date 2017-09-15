@@ -1,11 +1,14 @@
-1. [Compiler and Execution Phase](#compiler-and-execution-phase)
-2. [Hoisting](#hoisting)
-2. [Prototype](#prototype)
-3. [This](#this)
-4. [Closure](#closure)
-5. [IIFE](#iife)
-6. [Map, Filter and Reduce](#map-filter-and-reduce)
-7. [Call, Apply and Bind](#call-apply-and-bind)
+- [Compiler and Execution Phase](#compiler-and-execution-phase)
+- [Hoisting](#hoisting)
+- [Scope](#scope)
+    * [Lexical Scope](#lexical-scope)
+    * [Function Scope](#function-scope)
+    * [Block Scope](#block-scope)
+- [Prototype](#prototype)
+- [This](#this)
+- [Closure](#closure)
+- [Map, Filter and Reduce](#map-filter-and-reduce)
+- [Call, Apply and Bind](#call-apply-and-bind)
 
 # Compiler and Execution Phase
 
@@ -30,7 +33,7 @@ _Compile Phase_
 - The 2nd `foo` as a variable declaration inside the `bar()` Scope
 - The 3rd `foo` as a variable declaration inside the `baz()` Scope. Because it's a parameter of a function, it will still be declared as a variable.
 
-_Execution Phase_
+_Execution Phase (Lexical Scope)_
 
 - Line 1 will become simply `foo = 'bar'` during the execution phase as it’s been declared
     - It will see `foo` and ask the Scope manager `Has the global Scope has ever heard of a variable called 'foo'?`
@@ -85,6 +88,119 @@ d = function() {
 }
 ```
 
+# Scope
+
+Scope in JavaScript is where the compiler looks for variables and functions when it needs them. We know already that during the _Compile Phase_, JavaScript will looked at how variables are declared, but how about _Scope_?
+
+### Lexical Scope
+
+Above, we said that there are two phases that the JavaScript interpreter will go through - _Compile_ and _Execution_. During the _Execution Phase_ is when variable assignments are made and functions are executed. _Lexical Scope_ means **compile-time scope**, and so the _Lexical Scope_ is the scope that was determined after the _Compile Phase_. Let's put this together in an example:
+
+**Initial code**
+```javascript
+'use strict'
+
+var foo = 'foo'
+var wow = 'wow'
+
+function bar(wow) {
+  var pow = 'pow'
+  console.log(foo) // 'foo'
+  console.log(wow) // 'zoom'
+}
+
+bar('zoom')
+console.log(pow) // ReferenceError: pow is not defined
+```
+
+**After Compile Phase**
+```javascript
+'use strict'
+
+// Variables are hoisted to the top of the current scope
+var foo
+var wow
+
+// Function declarations are hoisted as-is at the top of the current scope
+function bar(wow) {
+  // wow = 'zoom'
+  var pow
+  pow = 'pow'
+  console.log(foo) // 'foo'
+  console.log(wow) // 'zoom'
+}
+
+foo = 'foo'
+wow = 'wow'
+
+bar('zoom')
+console.log(pow) // ReferenceError: pow is not defined
+```
+
+- Declarations are hoisted to the top of their **current scope**
+- `wow` is also declared within the scope of `bar()` as it's a function parameter
+
+Now for the _Execution Phase_. If we look at `console.log(foo)`, the JS interpreter needs to find the declaration of `foo` before it executes this line. Is `foo` in the scope of `bar()`? No, move to its parent scope. Is `foo` in the `global` scope? Yes. The interpreter will now execute this line. When executing `console.log(pow)`, it can't find `pow` anywhere, which is why we see a `ReferenceError`.
+
+### Function Scope
+
+Variables declared in a _Function Scope_ cannot be accessed from outside the function. This is a very powerful pattern to create private properties and only have access to them from within a _Function Scope_.
+
+### Block Scope
+
+A `try/catch` statement will create a new _Block Scope_, and more specifically, only the `catch` clause will make this scope.
+
+```javascript
+'use strict'
+
+try {
+  var foo = 'foo'
+  console.log(bar)
+}
+catch (err) {
+  console.log(err)
+}
+
+console.log(foo)
+console.log(err)
+```
+
+In this example, `foo` will work as expected, but `err` will throw a `ReferenceError`.
+
+In ES6, `let` and `const` are also bound to the _Block Scope_ they were declared in. This can be any block, whether it's an `if`, `for` or `function` block. Before `let` and `const`, it would be extremely inconvenient to create "private" variables, but now we can enforce this quite easily. This does 2 things:
+- Reduce the possibility of bugs, or difficult-to-understand bugs
+- Allows the garbage collector to clean these variables once we're out of the _Block Scope_
+
+**IIFE**
+
+An IIFE (Immediately Invoked Function Expression) is a pattern that allows you to create a new _Block Scope_. They are function expressions that we invoke as soon as the interpreter runs through the function.
+
+```javascript
+var foo = 'foo';
+
+(function bar() {
+  console.log('in function bar');
+})()
+
+console.log(foo);
+```
+
+Above, the IIFE will be the first thing that we see logged. We just saw that function declarations are hoisted to the top by the interpreter, so how does this happen?
+- Wrapping the function in `(function() { ... })` turns this into a function expression
+- Adding `()` to the end will immediately invoke that function expression
+
+```javascript
+for (var i = 0; i < 5; i++) {
+  (function logIndex(index) {
+    setTimeout(function () {
+      console.log('index: ' + index)
+    }, 1000)
+  })(i)
+}
+```
+
+IIFEs are effective at creating private scopes. If we didn't use an IIFE above, the output would be `5, 5, 5, 5, 5`. By the time we've waited 1000ms, the value of `i` would be `5`, so each log would be `5`. With an IIFE, it will create a private scope with the correct value of `i` with each iteration of the `for` loop, and we get the desired output.
+
 # Prototype
 
 ### What is prototype? And why is it difficult to understand?
@@ -131,7 +247,7 @@ Any time you try to access an Object's attribute, JavaScript is looking through 
 
 We saw that for an Object, `__proto__` defines the Object's prototype. Another property, `prototype`, belongs only to functions. It's used to build the `__proto__` when the function is used as a constructor with the `new` operator.
 
-```js
+```javascript
 function Car(name) {
   this.name = name
 }
@@ -156,7 +272,7 @@ The can create as many `Car` Objects as we want, and if we want to add a propert
 
 The JavaScript `class` appeals to developers from OOP backgrounds, but it's essentially doing the same thing.
 
-```js
+```javascript
 class Rectangle {
   constructor(height, width) {
     this.height = height
@@ -179,7 +295,7 @@ console.log(square.area) // 100
 
 This is basically the same as:
 
-```js
+```javascript
 function Rectangle(height, width) {
   this.height = height
   this.width = width
@@ -418,40 +534,6 @@ const secretFunction = (secret) =>
 ```
 
 This `getSecret` function has access to its parent's Scope, giving it access to `secret` and any other variables created within `secretFunction`. If we try to access `secret` from outside of this `secretFunction`, it will throw an error.
-
-# IIFE
-
-- Takes advantage of the functionality of a `function` to create a private Scope for your enclosed code
-- Wraps the function in () to create a function expression rather than a standard function keyword declaration
-- Add () to immediately invoke the expression
-
-_Module Pattern_
-
-An IIFE can also be used to create a "module":
-
-```javascript
-var foo = (function() {
-  var o = {
-    bar: 'bar'
-  }
-
-  return {
-    bar: function() {
-      console.log(o.bar)
-    }
-  }
-})()
-
-foo.bar() // 'bar'
-```
-
-Outside of the IIFE, we can call `foo.bar()` and it will return to us the value of `o.bar` from inside the "private" code. However, this code is completely private, and we have no way of directly accessing or referencing `o.bar` inside the `foo` IIFE.
-
-This is great for creating private modules or pieces of code, or for immediately invoking a block of code. Here are some specific requirements when using this **Module Pattern**:
-
-- Wraps some code in an IIFE to make the inner workings of the module private
-- Returns at least one function that will have a closure over the private Scope of the module
-- This gives us a public API which is using private data from the module
 
 # Map, Filter and Reduce
 
