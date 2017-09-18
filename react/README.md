@@ -12,6 +12,10 @@
     * [Recompose: Dynamic Rendering](#recompose-dynamic-rendering)
     * [Recompose: Formatting existing props](#recompose-formatting-existing-props)
 
+# Why do we use a framework?
+
+There are many reasons, but one is that interacting with the DOM is one the most expensive operations you can do in Javascript in terms of performance. We should use it only when we have to, and this is one of the key principles that SPA frameworks try to take care of for us. For example, React will calculate exactly which nodes in the DOM need to be re-rendered and only re-render those.
+
 # Parent & Child Communication
 
 ### Instance Methods
