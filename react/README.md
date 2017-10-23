@@ -18,7 +18,7 @@ There are many reasons, but one is that interacting with the DOM is one the most
 
 # Lifecycle Methods
 
-![](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "React lifecycle methods")
+![](/react/lifecycle-methods.jpg "React lifecycle methods")
 
 # Parent & Child Communication
 
