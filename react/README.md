@@ -16,6 +16,10 @@
 
 There are many reasons, but one is that interacting with the DOM is one the most expensive operations you can do in Javascript in terms of performance. We should use it only when we have to, and this is one of the key principles that SPA frameworks try to take care of for us. For example, React will calculate exactly which nodes in the DOM need to be re-rendered and only re-render those.
 
+# Lifecycle Methods
+
+![](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "React lifecycle methods")
+
 # Parent & Child Communication
 
 ### Instance Methods
