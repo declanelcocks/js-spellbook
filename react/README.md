@@ -5,6 +5,7 @@
     * [Shallow Comparison](#shallow-comparison)
     * [Don't bind functions inside render](#dont-bind-functions-inside-render)
     * [Don't derive data in render](#dont-derive-data-in-render)
+- [Portals](#portals)
 - [HOCs](#hocs)
     * [Intro to HOCs](#intro-to-hocs)
     * [Recompose: Lifecycle Hooks](#recompose-lifecycle-hooks)
@@ -177,6 +178,103 @@ export default compose(
 ```
 
 And finally, you could consider using `reselect` to create selectors which return the derived data from Redux.
+
+# Portals
+
+Portals were a added in React 16, and straight away libraries such as [react-modal](https://github.com/reactjs/react-modal) used Portals to improve their libraries. Portals allow us to create links between a component and an element. In the case of creating a modal, most people that have used a modal library will know how annoying styling, controlling state, sharing state and HTML markup can be. The idea for Portals is that you can create one `<div>` outside of your React `<div>` and simply create a Portal to that `<div>` from inside your app.
+
+Let's take a look at an example:
+
+```js
+class ExternalPortal extends Component {
+  constructor(props) {
+    super(props);
+    // STEP 1
+    this.containerEl = document.createElement('div');
+    this.externalWindow = null;
+  }
+
+  componentDidMount() {
+    // STEP 3
+    this.externalWindow = window.open('', '', 'width=600,height=400,left=200,top=200');
+
+    // STEP 4
+    this.externalWindow.document.body.appendChild(this.containerEl);
+
+    // STEP 5
+    this.externalWindow.addEventListener('beforeunload', () => {
+      this.props.handleClosePortal();
+    });
+  }
+
+  componentWillUnmount() {
+    this.externalWindow.close();
+  }
+
+  render() {
+    // STEP 2
+    return ReactDOM.createPortal(this.props.children, this.containerEl);
+  }
+}
+```
+
+What's happening here?
+
+1. Create an empty `<div>`
+2. Create a Portal with `this.props.children` as its children, and render those inside our new empty `<div>`
+3. Upon mounting, create a new external window
+4. We now have a `<div>` with a Portal attached to it, which is rendering whatever children are passed into it. Here, we just append the body of our new external window with our `<div>` Portal
+5. Lastly, we listen for whenever this external window is closed. When it's closed, we'll call `this.props.handleClosePortal` which should be passed in by its parent and trigger some side-effects in the parent
+
+So, now we have a Portal that when used, will render whatever its children are and call a parent prop when closed. Most importantly, it's rendered somewhere completely outside of the `<div>` which holds our React app!
+
+```js
+class App extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      counter: 0,
+      showPortal: false,
+    };
+  }
+
+  componentDidMount = () => {
+    window.addEventListener('beforeunload', () => this.closePortal());
+
+    window.setInterval(() => {
+      this.setState(state => ({
+        counter: state.counter + 1,
+      }));
+    }, 1000);
+  }
+
+  togglePortal = () => this.setState({ showPortal: !this.state.showPortal })
+
+  closePortal = () => this.setState({ showPortal: false })
+
+  render() {
+    return (
+      <div>
+        <h1>Counter: {this.state.counter}</h1>
+
+        <button onClick={this.togglePortal}>`${this.state.showPortal ? 'Close' : 'Open'} Portal`</button>
+
+        {/* Use our Portal instance and pass in `this.state.counter` */}
+        {this.state.showPortal && (
+          <ExternalPortal handleClosePortal={this.closePortal} >
+            <h1>`Counter in a Portal: ${this.state.counter}`</h1>
+
+            <button onClick={() => this.closePortal()}>Close!</button>
+          </ExternalPortal>
+        )}
+      </div>
+    );
+  }
+}
+```
+
+Now we have a straight forward `App` component, which has some local state to store `showPortal`, `counter` and some methods to toggle/update those state properties. When `showPortal` is `true`, we render our `ExternalPortal` and pass in children which take advantage of `App`'s local state, and also pass in `App`'s method to close the Portal. Magic! ✨
 
 # HOCs
 

@@ -51,6 +51,7 @@
         * [Shallow Comparison](/react#shallow-comparison)
         * [Don't bind functions inside render](/react#dont-bind-functions-inside-render)
         * [Don't derive data in render](/react#dont-derive-data-in-render)
+    - [Portals](/react#portals)
     - [HOCs](/react#hocs)
         * [Intro to HOCs](#intro-to-hocs)
         * [Recompose: Lifecycle Hooks](/es6#recompose-lifecycle-hooks)
