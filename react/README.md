@@ -12,6 +12,11 @@
     * [Recompose: Apply state/methods](#recompose-apply-statemethods)
     * [Recompose: Dynamic Rendering](#recompose-dynamic-rendering)
     * [Recompose: Formatting existing props](#recompose-formatting-existing-props)
+- [Provider](#provider)
+    * [Context](#context)
+    * [Simple Provider](#simple-provider)
+    * [HOC Provider](#hoc-provider)
+    * [Using Recompose to Create a Provider](#using-recompose-to-create-a-provider)
 
 # Why do we use a framework?
 
@@ -448,3 +453,173 @@ export default compose(
 ```
 
 Now, Recompose will take care of creating this formatted prop whenever the `dob` prop changes.
+
+# Provider
+
+Use React, and you're almost guaranteed to run into some form of `<Provider>` component. Redux, MobX or any theming library all use this pattern in order to pass down props to every component.
+
+### Context
+
+First, we need to understand what React's Context is, as that's what all of these Providers are using. React often encourages people not to use context, but it's a powerful feature which can be great for making all components aware of things such as state or themes. You can also use context on a much smaller scale than the entire app. Consider the following:
+
+```
+--A--B
+   \
+    C--D--E
+```
+
+Imagine that component B and E both relied on a variable or method used in component A. With no state management library such as Redux, we'd have to pass that variable down through all of the components until we got to E. With context we could just provide this variable in context, and then consume context in the components that need it. It's often said **not** to do this as you can very easily make a lot of components aware of things they don't need to be.
+
+A much better example would be if you have a global theme, as _every_ component would need to be aware of this theme in order to perform its own styling.
+
+**How?**
+
+```js
+class A extends Component {
+  getChildContext() {
+    return {
+      theme: "green"
+    };
+  }
+
+  render() {
+    return <D />;
+  }
+}
+
+class E extends Component {
+  render() {
+    return (
+      <div style={{ color: this.context.theme }}>
+        {this.children}
+      </div>
+    );
+  }
+}
+```
+
+Here's a full example of what we mentioned above to show how context is used.
+
+### Simple Provider
+
+Now that we know how context works, let's use it to provide our app with a theme.
+
+```js
+class ThemeProvider extends Component {
+  getChildContext() {
+    return { color: this.props.color }
+  }
+
+  render() {
+    return <div>{this.props.children}</div>
+  }
+}
+
+ThemeProvider.childContextTypes = {
+  color: PropTypes.string
+}
+
+// Our main file somewhere
+ReactDOM.render(
+  <ThemeProvider color="green">
+    <App />
+  </ThemeProvider>,
+  document.getElementById('app')
+)
+
+class Paragraph extends React.Component {
+  render() {
+    const { color } = this.context
+
+    return <p style={{ color: color }}>{this.props.children}</p>
+  }
+}
+
+Paragraph.contextTypes = {
+  color: PropTypes.string
+}
+```
+
+Now we have a `ThemeProvider` that takes in a single prop, and sets that prop as context throughout the whole app. If you've used any state management libraries this should all be looking very familiar. In any child component of `<App />` we can now access `this.context.color` just as you would with any `this.props` or `this.state`. You may now know what's next, how do we turn this into a more friendly HOC than using `this.context` everywhere?
+
+### HOC Provider
+
+```js
+const getContext = contextTypes => Component => {
+  class GetContext extends React.Component {
+    render() {
+      return <Component { ...this.props } { ...this.context } />
+    }
+  }
+
+  GetContext.contextTypes = contextTypes
+
+  return GetContext
+}
+```
+
+This will work exactly the same as any other library. The main purpose of this is to try and reduce the amount of properties being sent into our child component. If, for example, we have 100s of properties stored in context, then we don't want to send all of them down to every component.
+
+```js
+const Heading = ({ color, children }) => <h1 style={{ color }}>{children}</h1>
+
+const contextTypes = {
+  color: PropTypes.string
+}
+
+const HeadingWithContext = getContext(contextTypes)(Heading);
+```
+
+Just as we do with Redux's `connect` function, we can create an Object defining what we want from context, and our `getContext` helper will fetch it and add it as `props` to the component. Great!
+
+### Using Recompose to Create a Provider
+
+`recompose` can be used to create the above context HOC in a much cleaner fashion:
+
+```js
+const Provider = () => withContext(
+  { store: PropTypes.object },
+  props => ({ store: props })
+)(props => React.Children.only(props.children));
+
+const connect = Component => getContext(
+  { store: PropTypes.object }
+)(Component);
+
+export { Provider, connect };
+```
+
+Much simpler. Our Provider will work exactly the same, but our `getContext` helper can be refactored into a much cleaner `connect` helper. It uses `getContext` to deconstruct the `context` Object and get `context.store`, and then pass that in as `props` for the component.
+
+**How to use it?**
+
+```js
+const App = () => <Home />
+
+const Home = connect(({ store }) => <h1>{store.app.title}</h1>)
+
+render(
+  <Provider app={{ title: 'recompose is cool' }}>
+    <App />
+  </Provider>,
+  document.getElementById('app')
+)
+```
+
+Just like that, we have virtually implemented `react-redux`. In fact, if we really did want to implement `react-redux` we'd only have to change our `connect` helper to the following for it to work:
+
+```js
+const connect = mapStateToProps => Component => compose(
+  getContext({ store: PropTypes.object }),
+  mapProps(props => ({ ...props, ...mapStateToProps(props.store) })),
+)(Component);
+
+// Usage
+const mapStateToProps = store => ({
+  title: store.app.title
+})
+
+export default connect(mapStateToProps)(Home)
+```
+
+Now, our `connect` helper will first get the context, and then use our `mapStateToProps` function to map the required props to the component. It's not perfect, as it currently requires a `mapStateToProps` function to be passed in, but the basic idea is there at least.
