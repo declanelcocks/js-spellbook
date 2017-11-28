@@ -61,3 +61,5 @@
         * [Recompose: Apply state/methods](/es6#recompose-apply-statemethods)
         * [Recompose: Dynamic Rendering](/es6#recompose-dynamic-rendering)
         * [Recompose: Formatting existing props](/es6#recompose-formatting-existing-props)
+- [Jest](/jest)
+    - [Setup](/jest#setup)
