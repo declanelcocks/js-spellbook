@@ -1,5 +1,25 @@
 - [Setup](#setup)
 
+**Demo Component:**
+
+Below is the demo component we're going to use throughout the examples on this page:
+
+```
+import Icon from './Icon'
+
+const ButtonWithIcon = ({ handleClick, icon, text }) =>
+  <button onClick={handleClick}>
+    <Icon icon={icon} />
+    {text}
+  </button>
+
+ButtonWithIcon.defaultProps = {
+  icon: 'jest'
+}
+
+export default ButtonWithIcon
+```
+
 # Setup
 
 Remember to do the following in your Jest setup files:
@@ -16,3 +36,39 @@ global.shallow = shallow
 global.render = render
 global.mount = mount
 ```
+
+# Shallow Rendering
+
+Diving straight in, `enzyme` allows us to use either `shallow` or `mount` when rendering a component. Here's an example:
+
+```js
+it('should...', () => {
+  const iconName = 'jest'
+
+  const wrapper = shallow(
+    <ButtonWithIcon icon={iconName} />
+  )
+
+  // Tests here...
+})
+```
+
+When using `shallow`, this would render the following:
+
+```html
+<button>
+  <Icon icon="jest" />
+  Hello Jest!
+</button>
+```
+
+And with `mount`, it would render this:
+
+```html
+<button>
+  <i class="icon icon_jest"></i>
+  Hello Jest!
+</button>
+```
+
+If we were just interesting in testing our `ButtonWithIcon` component, we'd most likely just need to use `shallow`.
