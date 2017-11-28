@@ -63,3 +63,7 @@
         * [Recompose: Formatting existing props](/es6#recompose-formatting-existing-props)
 - [Jest](/jest)
     - [Setup](/jest#setup)
+    - [Snapshot Testing](/jest#snapshot-testing)
+    - [Checking Props](/jest#checking-props)
+    - [Event Handlers](/jest#event-handlers)
+    - [Styling](/jest#styling)
