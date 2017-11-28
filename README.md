@@ -44,6 +44,8 @@
         * [Generators with Bluebird](/es6#generators-with-bluebird)
         * [Build your own generator library](/es6#build-your-own-generator-library)
 - [JavaScript Magic](/javascript-magic)
+    - [Debounce](/javascript-magic#debounce)
+    - [Piping](/javascript-magic#piping)
 - [React](/react)
     - [Parent & Child Communication](/react#parent--child-communication)
         * [Instance Methods](/es6#instance-methods)
