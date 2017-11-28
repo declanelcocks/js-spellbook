@@ -12,6 +12,8 @@
     * [Recompose: Apply state/methods](#recompose-apply-statemethods)
     * [Recompose: Dynamic Rendering](#recompose-dynamic-rendering)
     * [Recompose: Formatting existing props](#recompose-formatting-existing-props)
+    * [Render Props](#render-props)
+    * [Function as Child components](#function-as-child-components)
 - [Provider](#provider)
     * [Context](#context)
     * [Simple Provider](#simple-provider)
@@ -453,6 +455,259 @@ export default compose(
 ```
 
 Now, Recompose will take care of creating this formatted prop whenever the `dob` prop changes.
+
+### Render Props
+
+**Background:**
+
+Diving straight in, here's a HOC which gives a component `props.mouse` with `x` and `y` co-ordinates.
+
+```js
+const withMouse = (Component) => {
+  return class extends React.Component {
+    state = { x: 0, y: 0 }
+
+    handleMouseMove = (event) => {
+      this.setState({
+        x: event.clientX,
+        y: event.clientY
+      })
+    }
+
+    render() {
+      return (
+        <div style={{ height: '100%' }} onMouseMove={this.handleMouseMove}>
+          <Component {...this.props} mouse={this.state}/>
+        </div>
+      )
+    }
+  }
+}
+
+const App = React.createClass({
+  render() {
+    // Instead of maintaining our own state,
+    // we get the mouse position as a prop!
+    const { x, y } = this.props.mouse
+
+    return (
+      <div style={{ height: '100%' }}>
+        <h1>The mouse position is ({x}, {y})</h1>
+      </div>
+    )
+  }
+})
+
+// Just wrap your component in withMouse and
+// it'll get the mouse prop!
+const AppWithMouse = withMouse(App)
+
+ReactDOM.render(<AppWithMouse/>, document.getElementById('app'))
+```
+
+Now we can wrap any component and it'll receive `this.props.mouse`. So what's wrong with it?
+
+- **Indirection:** With multiple HOCs being used together, we can very easily be left wondering where our state comes from and wondering which HOC provides which props.
+- **Naming collisions:** Two HOCs that try to use the same prop name will collide and overwrite one another, and it's actually quite annoying because React won’t warn us about the prop name collision either.
+- **Static composition:** HOCs have to be used outside of React's lifecycle methods, as we see with `AppWithMouse` above, which means we can't do much in the way of making our HOCs dynamic.
+- **Boilerplate:** There's a lot of boilerplate that comes with a HOC, and as you can see in the above example, we had to make sure our `withMouse` HOC included `height: 100%` as part of its style. HOCs are wrapping your components with additional components, so inevitably you're going to end up in some messy styling situations at some point. The component that is returned from the HOC needs to act as similarly as it can to the component that it wraps.
+
+**Seeing the light of render props**
+
+> A render prop is a function prop that a component uses to know what to render
+
+So what does this mean? Well, the idea is this: instead of “mixing in” or decorating a component to share behaviour, just render a regular component with a `render` prop that it can use to share some state with you. Here's our `withMouse` HOC as a render prop:
+
+```js
+class Mouse extends Component {
+  static propTypes = {
+    render: PropTypes.func.isRequired
+  }
+
+  state = { x: 0, y: 0 }
+
+  handleMouseMove = (event) => {
+    this.setState({
+      x: event.clientX,
+      y: event.clientY
+    })
+  }
+
+  render() {
+    return (
+      <div onMouseMove={this.handleMouseMove}>
+        {this.props.render(this.state)}
+      </div>
+    )
+  }
+}
+
+const App = () => (
+  <div style={{ height: '100%' }}>
+    <Mouse render={({ x, y }) => (
+      <h1>The mouse position is ({x}, {y})</h1>
+    )}/>
+  </div>
+)
+```
+
+Now hold on, our `Mouse` component is just calling `this.props.render(this.state)`? `Mouse` is now a component that just exposes its internal state to a `render` prop. This means that `App` can render whatever it wants with that state. Does this solve any of the issues we had with HOCs?
+
+- **Indirection:** Yes. We no longer wonder where our state is coming from as we can see them in the render prop's arguments, and we can see it comes from `<Mouse />`
+- **Naming collisions:** Yes. We are not merging any property names together anymore, and neither is React.
+- **Boilerplate:** Yes. In most cases, there would be little to no boilerplate needed as we are no longer wrapping components with more components. We are just passing some data into a render function. In some cases you could even just do `return this.props.render(this.state)` and be done with it.
+- **Static composition:** Yes. Everything is happening inside the `render` method, so we get to take advantage of the React lifecycle.
+
+### Function as Child components
+
+We've already looked at `render` props, so now let's look at the similar concept of functions as child components. Here's a simple example:
+
+```js
+const MyComponent = ({ children }) => <div>{children('Declan')}</div>
+
+// Usage
+<MyComponent>
+  {(name) => <div>{name}</div>}
+</MyComponent>
+
+<MyComponent>
+  {(name) => <img src="/my-picture.jpg" alt={name} />}
+</MyComponent>
+```
+
+As you can see, it's really easy to re-use these components as `MyComponent` is just exposing some data to whatever its `children` function renders.
+
+**A more complicated example**
+
+Next, we'll create a `<Ratio>` component that listens for resize events and gives the device dimensions to its child.
+
+**The boilerplate:**
+
+```js
+class Ratio extends Component {
+  render() {
+    return (
+      {this.props.children()}
+    )
+  }
+}
+
+Ratio.propTypes = {
+  children: React.PropTypes.func.isRequired,
+}
+```
+
+Now we have a simple component, and we explicitly tell the user of it that we're expecting a function as `props.children`. Now let's add some internal state to `Ratio`:
+
+```js
+class Ratio extends React.Component {
+  constructor() {
+    super(...arguments)
+
+    this.state = {
+      hasComputed: false,
+      width: 0,
+      height: 0,
+    }
+  }
+
+  getComputedDimensions({ x, y }) {
+    const { width } = this.container.getBoundingClientRect()
+
+    return {
+      width,
+      height: width * (y / x),
+    }
+  }
+
+  componentWillReceiveProps(next) {
+    this.setState(this.getComputedDimensions(next))
+  }
+
+  componentDidMount() {
+    this.setState({
+      ...this.getComputedDimensions(this.props),
+      hasComputed: true,
+    })
+
+    window.addEventListener('resize', this.handleResize, false)
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.handleResize, false)
+  }
+
+  handleResize= () => {
+    this.setState({
+      hasComputed: false,
+    }, () => {
+      this.setState({
+        hasComputed: true,
+        ...this.getComputedDimensions(this.props),
+      })
+    })
+  }
+
+  render() {
+    return (
+      <div ref={(ref) => this.container = ref}>
+        {this.props.children(this.state.width, this.state.height, this.state.hasComputed)}
+      </div>
+    );
+  }
+}
+
+Ratio.propTypes = {
+  x: React.PropTypes.number.isRequired,
+  y: React.PropTypes.number.isRequired,
+  children: React.PropTypes.func.isRequired,
+}
+
+Ratio.defaultProps = {
+  x: 3,
+  y: 4
+};
+```
+
+We did a lot here. We basically have an `eventListener` listening for `resize` events, and whenever it receives an event it just calculates the ratio based on the device width. After, we pass all that into our `children` function. Now, we can use it however we want:
+
+```js
+<Ratio>
+  {(width, height, hasComputed) => (
+    hasComputed
+      ? <img src="/my-image.png" width={width} height={height} />
+      : null
+  )}
+</Ratio>
+
+<Ratio>
+  {(width, height, hasComputed) => (
+    <div style={{ width, height }}>Hello world!</div>
+  )}
+</Ratio>
+
+<Ratio>
+  {(width, height, hasComputed) => (
+    hasComputed && height > TOO_TALL
+      ? <TallThing />
+      : <NotSoTallThing />
+  )}
+</Ratio>
+```
+
+**Positives:**
+- The user can choose what they do with the properties passed into `children`
+- The user can choose what property names to use as it's just a function. A lot of HOCs will force you to use their property names
+- No naming collisions as there isn't any binding connection between the HOC and its child. Instead you could use 2 HOCs together that both calculate the device width and have no issues at all
+- HOCs remove constants! See below for an example:
+
+```js
+MyComponent.MyConstant = 'HELLO'
+
+export default connect(..., MyComponent)
+```
+
+Normally, a HOC would remove your `MyConstant` unless your HOC manually re-implements it.
 
 # Provider
 
