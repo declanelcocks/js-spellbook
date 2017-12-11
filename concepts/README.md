@@ -486,6 +486,168 @@ console.log(`Actual: ${myOtherAdd.value}`)
 ```
 </details>
 
+## An alternate take on `this`
+
+`2ality` proposed a different take on `this` now that we have arrow functions. In his take, he refers to `() => {}` as a **real** function and `function () {}` as an **ordinary** function.
+
+**Ordinary Functions**
+
+Here's an ordinary function:
+
+```js
+function add(x, y) {
+  return x + y;
+}
+```
+
+Every ordinary function has an implicit parameter `this`, that is always pre-defined as `undefined`. This makes these two lines pretty much the same:
+
+```js
+add(3, 5)
+add.call(undefined, 3, 5)
+```
+
+If you nest ordinary functions, `this` from `outer` is shadowed.
+
+```js
+function outer() {
+  function inner() {
+    console.log(this) // undefined
+  }
+
+  console.log(this) // 'outer this'
+}
+
+outer.call('outer this')
+```
+
+Since `inner` is also an ordinary function, it has its own `this` and any `this` outside of it has been hidden away.
+
+**Real Functions (arrow)**
+
+Here's an arrow function:
+
+```js
+const add = (x, y) => {
+  return x + y
+}
+```
+
+If you nest an arrow function inside an ordinary function, `this` is not shadowed:
+
+```js
+function outer() {
+  const inner = () => {
+    console.log(this) // outer this
+  }
+
+  console.log(this) // outer this
+  inner()
+}
+
+outer.call('outer this')
+```
+
+The scope of an arrow function is determined by when it was created. Above, it is created inside `outer`, thus it will inherit `this` from `outer`.
+
+```js
+function outer() {
+  const inner = () => this
+  console.log(inner.call('inner this')) // outer this
+}
+
+outer.call('outer this')
+```
+
+The `this` of an arrow function cannot be influenced. Above, our `inner` function is still behaving exactly the same as in the previous example, despite us trying to explicitly define its `this` using `inner.call()`. The arrow function was still created inside `outer`, and will still inherit `this` from `outer`.
+
+**Ordinary Functions as Methods & the Dot Operator**
+
+Ordinary functions are typically used to define "methods" on an Object:
+
+```js
+const obj = {
+  prop: function () {}
+  // Can also be written as:
+  // prop() {}
+}
+```
+
+We can access properties of an Object using the dot operator (`.`). The dot operator has 2 uses:
+
+- Getting and setting properties using `obj.prop`
+- Calling methods using `obj.prop(x, y)`
+
+The latter is effectively the same as calling `obj.prop.call(obj, x, y)`. Again, when using an ordinary function `this`` is always explicitly defined.
+
+**Pitfalls of Using Ordinary Functions**
+
+```js
+callApi() {
+  getUsers()
+    .then(function () {
+      this.logStatus('Done')
+    })
+}
+```
+
+In a callback like this, `this.logStatus` will fail because `this` is `undefined` as we saw in the `inner` & `outer` examples.
+
+```js
+callApi() {
+  getUsers()
+    .then(() => {
+      this.logStatus('Done')
+    })
+}
+```
+
+As soon as we change it to an arrow function, it works. The arrow function is defined on-the-fly, which translates to it being defined inside `callApi` and having a reference to its `this`.
+
+```js
+prefixUserNames(names) {
+  return names.map(function(name) {
+    return `${this.company}: ${this.name}`
+  })
+}
+```
+
+Again, this will fail as `this.company` will be `undefined`. And again, with an arrow function it would be resolved.
+
+**Pitfall: Using Methods as Callbacks**
+
+Here's a component:
+
+```js
+class Component {
+  constructor(name) {
+    this.name = name
+
+    const btn = document.getElementById('myButton')
+    btn.addEventListener('click', this.handleClick)
+  }
+
+  handleClick() {
+    console.log(`Clicked ${this.name}`)
+  }
+}
+```
+
+This component should log `this.name` when clicked, but what will actually happen is an error of `this` being undefined in the method. Why? Well, when we call `this.handleClick` we are effectively doing this:
+
+```js
+const handler = this.handleClick
+handler()
+```
+
+As we know already this is calling `handler.call(undefined)` so of course it will fail. Here's the fix:
+
+```js
+btn.addEventListener('click', this.handleClick.bind(this))
+```
+
+Alternatively, we could define `handler` in the `constructor` as `this.handler = this.handleClick.bind(this)`, or write the `handleClick` method as an arrow function `handleClick = () {}`.
+
 # Closure
 
 Closure is when a function "remembers" its lexical scope (compile time scope), even when the function is executed outside that lexical scope. Here's a simple example:
