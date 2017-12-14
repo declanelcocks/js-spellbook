@@ -548,7 +548,7 @@ function outer() {
 outer.call('outer this')
 ```
 
-The scope of an arrow function is determined by when it was created. Above, it is created inside `outer`, thus it will inherit `this` from `outer`.
+**The scope of an arrow function is determined by when it was created**. Above, it is created inside `outer`, thus it will inherit `this` from `outer`.
 
 ```js
 function outer() {
@@ -578,7 +578,7 @@ We can access properties of an Object using the dot operator (`.`). The dot oper
 - Getting and setting properties using `obj.prop`
 - Calling methods using `obj.prop(x, y)`
 
-The latter is effectively the same as calling `obj.prop.call(obj, x, y)`. Again, when using an ordinary function `this`` is always explicitly defined.
+The latter is effectively the same as calling `obj.prop.call(obj, x, y)`. Again, when using an ordinary function `this`` is always explicitly defined. If we are just calling a regular function `fn(x, y)`, we can see there is no dot operator and thus we are basically calling `fn(undefined, x, y)` as `this`.
 
 **Pitfalls of Using Ordinary Functions**
 
