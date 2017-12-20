@@ -156,7 +156,7 @@ Here we're creating a new Array called `topTen` when the component renders. `top
 
 There are a couple of ways we could solve this. The first would be to only set `topTen` when we know the value of `posts` has changed:
 
-```javascript```
+```javascript
 componentWillMount() {
   this.setTopTenPosts(this.props.posts)
 }
