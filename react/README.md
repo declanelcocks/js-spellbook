@@ -510,7 +510,6 @@ Now we can wrap any component and it'll receive `this.props.mouse`. So what's wr
 - **Indirection:** With multiple HOCs being used together, we can very easily be left wondering where our state comes from and wondering which HOC provides which props.
 - **Naming collisions:** Two HOCs that try to use the same prop name will collide and overwrite one another, and it's actually quite annoying because React won’t warn us about the prop name collision either.
 - **Static composition:** HOCs have to be used outside of React's lifecycle methods, as we see with `AppWithMouse` above, which means we can't do much in the way of making our HOCs dynamic.
-- **Boilerplate:** There's a lot of boilerplate that comes with a HOC, and as you can see in the above example, we had to make sure our `withMouse` HOC included `height: 100%` as part of its style. HOCs are wrapping your components with additional components, so inevitably you're going to end up in some messy styling situations at some point. The component that is returned from the HOC needs to act as similarly as it can to the component that it wraps.
 
 **Seeing the light of render props**
 
@@ -555,7 +554,6 @@ Now hold on, our `Mouse` component is just calling `this.props.render(this.state
 
 - **Indirection:** Yes. We no longer wonder where our state is coming from as we can see them in the render prop's arguments, and we can see it comes from `<Mouse />`
 - **Naming collisions:** Yes. We are not merging any property names together anymore, and neither is React.
-- **Boilerplate:** Yes. In most cases, there would be little to no boilerplate needed as we are no longer wrapping components with more components. We are just passing some data into a render function. In some cases you could even just do `return this.props.render(this.state)` and be done with it.
 - **Static composition:** Yes. Everything is happening inside the `render` method, so we get to take advantage of the React lifecycle.
 
 ### Function as Child components
