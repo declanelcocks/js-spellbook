@@ -63,6 +63,7 @@
         * [Recompose: Formatting existing props](/react#recompose-formatting-existing-props)
         * [Render Props](/react#render-props)
         * [Function as Child components](/react#function-as-child-components)
+        * [Another simple use case for render Props](/react#another-simple-use-case-for-render-props)
     - [Provider](/react#provider)
         * [Context](/react#context)
         * [Simple Provider](/react#simple-provider)

@@ -14,6 +14,7 @@
     * [Recompose: Formatting existing props](#recompose-formatting-existing-props)
     * [Render Props](#render-props)
     * [Function as Child components](#function-as-child-components)
+    * [Another simple use case for render Props](#another-simple-use-case-for-render-props)
 - [Provider](#provider)
     * [Context](#context)
     * [Simple Provider](#simple-provider)
@@ -708,6 +709,62 @@ export default connect(..., MyComponent)
 ```
 
 Normally, a HOC would remove your `MyConstant` unless your HOC manually re-implements it.
+
+### Another simple use case for render Props
+
+This time, I'm going to have a simple `<List />` component which takes in a URL and renders a list. Why is this useful? Well, let's see:
+
+```js
+class List extends React.Component {
+  state = {
+    list: [],
+    isLoading: false,
+  }
+
+  fetchData = async () => {
+    const res = await fetch(this.props.url)
+    const json = await res.json()
+
+    this.setState({
+      list: json,
+      isLoading: false,
+    })
+  }
+
+  componentDidMount() {
+    this.setState({ isLoading: true }, this.fetchData);
+  }
+
+  render() {
+    return this.props.render(this.state);
+  }
+}
+```
+
+Now we have a component which takes care of fetching the data and applying any internal states such as `loading`. It's important to minimize duplicated code in a project to promote consistency and simplicity within the codebase (and UI). It also reduces the number of points of origin for an error when debugging, which is always good.
+
+Here's how we would use that `<List />` component:
+
+```js
+<List
+  url="https://api.github.com/users/declanelcocks/repos"
+  render={({ list, isLoading }) => (
+    <div>
+      <h2>My repos</h2>
+      {isLoading && <h2>Loading...</h2>}
+
+      <ul>
+        {list.length > 0 && list.map(repo => (
+          <li key={repo.id}>
+            {repo.full_name}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )} />
+```
+
+If we know that every component will have a consistent `Loading...` message, we could also extend our `List` to take care of this too.
 
 # Provider
 
