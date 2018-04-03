@@ -1,3 +1,6 @@
+- [Lifecycle Methods](#lifecycle-methods)
+- [Unexpected Side Effects](#unexpected-side-effects)
+- [React 16.3: How to handle side effects](#react-163-how-to-handle-side-effects)
 - [Parent & Child Communication](#parent--child-communication)
     * [Instance Methods](#instance-methods)
     * [Callback Functions](#callback-functions)
@@ -28,6 +31,151 @@ There are many reasons, but one is that interacting with the DOM is one the most
 # Lifecycle Methods
 
 ![](/react/lifecycle-methods.jpg "React lifecycle methods")
+
+### Unexpected Side Effects
+
+As of React 16.3, some commonly used lifecycle methods have been deemed `UNSAFE` by the React team and will be completely deprecated by React 17. The problem with some of the lifecycle methods is that they were often misused or misunderstood, which led to cases where side effects (state/prop changes) were not behaving as expected.
+
+First, we need to understand the work that React does to update our UI:
+
+- The `render` phase. This determines what changes need to be made in the DOM (for `react-dom` at least). React will call `render` and compare the result to the previous render.
+- The `commit` phase. This is when React actually applies our changes. In the case of `react-dom`, this is when React inserts, updates and removes DOM nodes. During this phase, lifecycle methods like `componentDidMount` and `componentDidUpdate` will be called.
+
+**Note:** For async rendering (coming soon in React 16.x), the rendering work will be paused and resumed to avoid blocking the browser. The main reason for this is that the commit phase is usually very fast, while rendering can be slow. React may invoke the render phase several times before actually committing the work (i.e. updating the UI).
+
+During the `render` phase, React can call any of the following lifecycle methods:
+
+- `constructor`
+- `componentWillMount`
+- `componentWillReceiveProps`
+- `componentWillUpdate`
+- `getDerivedStateFromProps`
+- `shouldComponentUpdate`
+- `render`
+- `setState`
+
+The above methods can and most likely will be called more than once during the render phase, so it's important that they do not contain side effects. Ignoring this can lead to memory leaks and invalid application states. It can often mean that the rendered state of the app is non-deterministic (we don't know what the output will be).
+
+### React 16.3: How to handle side effects?
+
+**Initializing state**
+
+```js
+class ExampleComponent extends React.Component {
+  state = {
+    currentColor: this.props.defaultColor,
+  }
+}
+```
+
+**Fetching external data**
+
+```js
+class ExampleComponent extends React.Component {
+  state = { data: null }
+
+  componentDidMount() {
+    this.request = fetchData()
+      .then((data) => {
+        this.request = null
+        this.setState({ data })
+      })
+  }
+
+  componentWillUnmount() {
+    if (this.request) this.request.cancel()
+  }
+
+  render() {
+    if (this.state.data === null) {
+      // Render loading state
+    } else {
+      // Render UI with data
+    }
+  }
+}
+```
+
+Previously, some people would do this kind of thing using `componentWillMount`. If the data is not immediately available when `componentWillMount` fires, the first `render` will still show a loading state regardless of where you initiate your fetch.
+
+**Updating state based on props**
+
+```js
+class ExampleComponent extends React.Component {
+  state = {
+    scrollingDown: false,
+    lastRow: null,
+  }
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    if (nextProps.currentRow !== prevState.lastRow) {
+      return {
+        scrollingDown: nextProps.currentRow > prevState.lastRow,
+        lastRow: nextProps.currentRow,
+      }
+    }
+
+    return null
+  }
+}
+```
+
+What's happening here is not too important, but the point is that `getDerivedStateFromProps` should now be used where `componentWillReceiveProps` was often used before.
+
+**Performing side-effects according to prop changes**
+
+```js
+class ExampleComponent extends React.Component {
+  componentDidUpdate(prevProps, prevState) {
+    if (this.props.isVisible !== prevProps.isVisible) {
+      logVisibleChange(this.props.isVisible);
+    }
+  }
+}
+```
+
+Before 16.3, we would often invoke side effects in `componentWillReceiveProps`. This method will often get called multiple times during a single update, so it's important to ensure it's only called once per update.
+
+**Reading DOM properties before an update**
+
+```js
+class ScrollingList extends React.Component {
+  listRef = null;
+
+  getSnapshotBeforeUpdate(prevProps, prevState) {
+    // Are we adding new items to the list?
+    // Capture the current height of the list so we can adjust scroll later.
+    if (prevProps.list.length < this.props.list.length) {
+      return this.listRef.scrollHeight;
+    }
+    return null;
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    // If we have a snapshot value, we've just added new items.
+    // Adjust scroll so these new items don't push the old ones out of view.
+    // (snapshot here is the value returned from getSnapshotBeforeUpdate)
+    if (snapshot !== null) {
+      this.listRef.scrollTop +=
+        this.listRef.scrollHeight - snapshot;
+    }
+  }
+
+  render() {
+    return (
+      <div ref={this.setListRef}>
+        {/* ...contents... */}
+      </div>
+    );
+  }
+
+  setListRef = ref => {
+    this.listRef = ref;
+  };
+}
+```
+
+Again, what's happening here is not too important, but it's important to see how `getSnapshotBeforeUpdate` works. This method will get called immediately **before** mutations are made to the DOM and `componentDidUpdate` is called immediately **after** mutations are made.
 
 # Parent & Child Communication
 
