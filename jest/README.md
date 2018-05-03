@@ -3,6 +3,11 @@
 - [Checking Props](#checking-props)
 - [Event Handlers](#event-handlers)
 - [Styling](#styling)
+- [Redux Actions](#redux-actions)
+
+**Helpers**
+
+Check [here](/jest/helpers.js) for some useful helper functions for Jest!
 
 **Demo Component:**
 
@@ -235,3 +240,64 @@ it('should apply the correct styles', () => {
   expect(style).toMatchSnapshot()
 })
 ```
+
+# Redux Actions
+
+```js
+export class UpdateUserForm extends React.Component {
+  onSubmit = () => this.props.updateUser(this.state)
+
+  render() {
+    return (
+      <Form onSubmit={this.onSubmit}>
+        <input id="nameInput" name="name" />
+      </Form>
+    )
+  }
+}
+
+export default compose(
+  connect(null, dispatch => ({
+    updateUser: values => dispatch(updateUser(values)),
+  })),
+)(UpdateUserForm)
+```
+
+We're going to test a simple `Form` component which takes in an action from Redux and dispatches it when the form is submitted. Nothing complicated so far.
+
+```js
+import Form from 'src/Form';
+import { shallowUntilTarget } from './helpers';
+
+describe('<UpdateUserForm>', () => {
+  it('updates user information', () => {
+    const store = createStore()
+    // Make sure to mock this as your actions may contain API calls
+    const dispatchSpy = sinon.spy(store, 'dispatch')
+
+    const root = shallowUntilTarget(
+      <UpdateUserForm store={store} />,
+      UserProfileManagerBase
+    )
+
+    // Simulate typing text into the name input
+    const name = 'Declan'
+    const changeEvent = {
+      target: { name: 'name', value: name },
+    }
+    root.find('#nameInput').simulate('change', changeEvent)
+
+    // Find the Form component & simulate an onSubmit call
+    const form = root.find(Form)
+    const onSubmit = form.prop('onSubmit')
+    onSubmit()
+
+    // Make sure onSubmit dispatched the correct action
+    const expectedAction = actions.updateUser({ name })
+    // Assert that the `dispatchSpy` was called with the `expectedAction`
+    sinon.assertCalledWith(dispatchSpy, expectedAction)
+  })
+})
+```
+
+A lot is happening here, but we're basically creating a mock `store` with Redux and simulating our `onSubmit` function. The design of Redux lends itself quite well to testing, since everything is very modular and not overly complicated. This means that we can simply dispatch some actions to our mock store and check they were called with the right arguments. Elsewhere, we should have tests for the actions themselves.

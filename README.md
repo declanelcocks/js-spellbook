@@ -78,3 +78,4 @@
     - [Checking Props](/jest#checking-props)
     - [Event Handlers](/jest#event-handlers)
     - [Styling](/jest#styling)
+    - [Redux Actions](/jest#redux-actions)
