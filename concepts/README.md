@@ -325,7 +325,9 @@ To workout what `this` is, we check the **call-site** and see which of these 4 r
 
 **Implicit Binding**
 
-Does the call-site have a context Object? Also referred to as an owning or containing Object. `this` will refer to the Object's properties
+The simplest way to think about implicit binding is, _what's to the left of the dot?_ Doing this will more often than not tell you what `this` is. See below, we say `obj.foo()`. What's to the left of the dot? `obj`. What is `this.bar`? `obj.bar`.
+
+Does the call-site have a context Object? Also referred to as an owning or containing Object. `this` will refer to the Object's properties. 
 
 ```javascript
 var obj = {
