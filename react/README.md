@@ -1081,3 +1081,308 @@ export default connect(mapStateToProps)(Home)
 ```
 
 Now, our `connect` helper will first get the context, and then use our `mapStateToProps` function to map the required props to the component. It's not perfect, as it currently requires a `mapStateToProps` function to be passed in, but the basic idea is there at least.
+
+# Suspense
+
+```tsx
+// Suspens lets your components "wait" for something before rendering
+const resource = fetchProfileData();
+
+function ProfilePage() {
+  return (
+    <Suspense fallback={<h1>Loading profile...</h1>}>
+      <ProfileDetails />
+      <Suspense fallback={<h1>Loading posts...</h1>}>
+        <ProfileTimeline />
+      </Suspense>
+    </Suspense>
+  );
+}
+
+function ProfileDetails() {
+  // Try to read user info, although it might not have loaded yet
+  const user = resource.user.read();
+  return <h1>{user.name}</h1>;
+}
+
+function ProfileTimeline() {
+  // Try to read posts, although they might not have loaded yet
+  const posts = resource.posts.read();
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>{post.text}</li>
+      ))}
+    </ul>
+  );
+}
+
+// The implementation of fetchProfileData() is not that important, but it will return
+// something like below:
+
+return {
+  read() {
+    if (status === "pending") {
+      throw suspender;
+    } else if (status === "error") {
+      throw result;
+    } else if (status === "success") {
+      return result;
+    }
+  }
+};
+```
+
+Libraries like Relay will have their own integration with Suspense to work with this syntax. In the future, other libraries may have their own implementation. The point is that it throws a "suspender" when the resource is still reading, which under-the-hood will allow the component to continue rendering. Of course, the fallbacks will show where you add them, but it allows you to render "most" of the page before the data has even started fetching.
+
+**Suspense is not:**
+- Data fetching implementation
+- Couple data fetching with your view layer. It helps display loading states in your UI, but it does not tie network logic to React components.
+
+**Suspense lets you:**
+- Deeply integrate data fetching libraries with React. If a data fetching library is integrated with Suspense, using it in your components feels very natural.
+- Avoid race conditions. Avoid error-prone async code. Suspense "feels" like reading data synchronously, as if it was already loaded.
+
+## Traditional Approaches vs Suspense
+
+**Fetch-on-render (e.g. fetch in useEffect):**
+- Start rendering components
+- Each component triggers a fetch in their useEffects
+- Often loeads to a waterfall effect of data fetching/loading
+
+```tsx
+function ProfilePage() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    fetchUser().then(u => setUser(u));
+  }, []);
+
+  if (user === null) {
+    return <p>Loading profile...</p>;
+  }
+  return (
+    <>
+      <h1>{user.name}</h1>
+      <ProfileTimeline />
+    </>
+  );
+}
+
+function ProfileTimeline() {
+  const [posts, setPosts] = useState(null);
+
+  useEffect(() => {
+    fetchPosts().then(p => setPosts(p));
+  }, []);
+
+  if (posts === null) {
+    return <h2>Loading posts...</h2>;
+  }
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>{post.text}</li>
+      ))}
+    </ul>
+  );
+}
+```
+Running this code results in:
+
+- Start fetching user and show loading until a user has been returned
+- Once it's finished, this will trigger ProfileTimeline to render and start loading posts
+- Finally, both user and posts will be rendered
+
+This is an unintentional waterfall sequence that could, and should have, been parallelized. As the app grows, this kind of behaviour could become more and more troublesome for the user.
+
+**Fetch-then-render**
+
+```tsx
+function fetchProfileData() {
+  return Promise.all([
+    fetchUser(),
+    fetchPosts()
+  ]).then(([user, posts]) => {
+    return {user, posts};
+  })
+}
+
+const promise = fetchProfileData();
+
+function ProfilePage() {
+  const [user, setUser] = useState(null);
+  const [posts, setPosts] = useState(null);
+
+  useEffect(() => {
+    promise.then(data => {
+      setUser(data.user);
+      setPosts(data.posts);
+    });
+  }, []);
+
+  if (user === null) {
+    return <p>Loading profile...</p>;
+  }
+  return (
+    <>
+      <h1>{user.name}</h1>
+      <ProfileTimeline posts={posts} />
+    </>
+  );
+}
+
+// The child doesn't trigger fetching anymore
+function ProfileTimeline({ posts }) {
+  if (posts === null) {
+    return <h2>Loading posts...</h2>;
+  }
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>{post.text}</li>
+      ))}
+    </ul>
+  );
+}
+```
+Similar to the last example, this waits until data has been fetched to render something for the user. Here, the API calls are grouped together, which would likely happen if you use GraphQL or any kind of request batching. We still wait, but the 2 API calls are ran in parallel.
+
+**Render-as-you-fetch (with Suspense)**
+
+Previously we wouuld start fetching, finish fetching and start rendering. The goal with Suspense is to start fetching, start rendering and then finish fetching. We want the UI to render as we are fetching data so the user sees something as soon as possible.
+
+```tsx
+// This is not a Promise. It's a special object from our Suspense integration as in the 
+// above simplified example.
+const resource = fetchProfileData();
+
+function ProfilePage() {
+  return (
+    <Suspense fallback={<h1>Loading profile...</h1>}>
+      <ProfileDetails />
+      <Suspense fallback={<h1>Loading posts...</h1>}>
+        <ProfileTimeline />
+      </Suspense>
+    </Suspense>
+  );
+}
+
+function ProfileDetails() {
+  // Try to read user info, although it might not have loaded yet
+  const user = resource.user.read();
+  return <h1>{user.name}</h1>;
+}
+
+function ProfileTimeline() {
+  // Try to read posts, although they might not have loaded yet
+  const posts = resource.posts.read();
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>{post.text}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+- As soon as ProfilePage renders, the fetching is kicked off and it tries to render both the ProfileDetails and the ProfileTimeline.
+- React will try to render ProfileDetails using "resource.user.read()". While the resource fetching, the library will throw a "suspender" and "suspend" the component.
+- Similarly, React will try to render ProfileTimeline and the same thing will happen when initially reading "resource.posts.read()".
+- Whenever a component is "suspended", it will try to use the "fallback" of the closest Suspense component above it in the tree.
+- Initially we will see "loading profile..." while ProfileDetails is "suspended"
+
+## Suspense and Race Conditions
+
+```tsx
+function ProfilePage({ id }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    fetchUser(id).then(u => setUser(u));
+  }, [id]);
+
+  if (user === null) {
+    return <p>Loading profile...</p>;
+  }
+  return (
+    <>
+      <h1>{user.name}</h1>
+      <ProfileTimeline id={id} />
+    </>
+  );
+}
+
+function ProfileTimeline({ id }) {
+  const [posts, setPosts] = useState(null);
+
+  useEffect(() => {
+    fetchPosts(id).then(p => setPosts(p));
+  }, [id]);
+
+  if (posts === null) {
+    return <h2>Loading posts...</h2>;
+  }
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>{post.text}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+Suppose that we have a button outside of the ProfilePage which will update the user ID that we want to show. Now, it's quite possible that we end up showing posts/profile data for two completely different users.
+
+Solving it with Suspense:
+
+```tsx
+const initialResource = fetchProfileData(0);
+
+function App() {
+  const [resource, setResource] = useState(initialResource);
+  return (
+    <>
+      <button onClick={() => {
+        const nextUserId = getNextId(resource.userId);
+        setResource(fetchProfileData(nextUserId));
+      }}>
+        Next
+      </button>
+      <ProfilePage resource={resource} />
+    </>
+  );
+}
+
+function ProfilePage({ resource }) {
+  return (
+    <Suspense fallback={<h1>Loading profile...</h1>}>
+      <ProfileDetails resource={resource} />
+      <Suspense fallback={<h1>Loading posts...</h1>}>
+        <ProfileTimeline resource={resource} />
+      </Suspense>
+    </Suspense>
+  );
+}
+
+function ProfileDetails({ resource }) {
+  const user = resource.user.read();
+  return <h1>{user.name}</h1>;
+}
+
+function ProfileTimeline({ resource }) {
+  const posts = resource.posts.read();
+  return (
+    <ul>
+      {posts.map(post => (
+        <li key={post.id}>{post.text}</li>
+      ))}
+    </ul>
+  );
+```
+
+- We've moved the resource into the App component
+- When the user ID is updated, it passes down the new "resouce" to the children
+- As before, this new fetch will start straight away and the UI will also render straight way.
