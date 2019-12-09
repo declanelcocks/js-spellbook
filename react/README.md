@@ -23,6 +23,7 @@
     * [Simple Provider](#simple-provider)
     * [HOC Provider](#hoc-provider)
     * [Using Recompose to Create a Provider](#using-recompose-to-create-a-provider)
+- [Suspense](#suspense)
 
 # Why do we use a framework?
 
